@@ -68,7 +68,7 @@ int main()
             else //if(g_mdf.countMissingInstructions() == 0)
             {
                 std::cout<<"[ " << std::this_thread::get_id()<<" ]"<< " Computation finished\n";
-                break;
+                return;
             }
         }
     };
@@ -84,9 +84,14 @@ int main()
     for(unsigned i=0;i<threads.size();++i)
     {
         std::cout<<"Joining thread:  "<<threads[i].get_id()<< std::endl;
-        threads[i].join();
+        if(threads[i].joinable())
+            threads[i].join();
+        else
+            std::cout<<"Not Joinable thread:  "<<threads[i].get_id()<< std::endl;
+
     }
 
+    std::cout<<"REP size: "<<g_mdf.countMissingInstructions()<<std::endl;
 
 /*    f = g_mdf.getFirable();
     std::cout<<"Executing instruction dag n. "<<f->dagNode->id<<std::endl;

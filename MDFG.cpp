@@ -70,6 +70,7 @@ class Mdfg
         std::unordered_map<Node *, Mdfi *> mapNodeMdfi;
         std::mutex m_firable;
         std::condition_variable cv;
+        bool computation_done = false;
 
     public:
 
@@ -101,6 +102,7 @@ class Mdfg
         }
     void sendToken(Mdfi * executeInstr){
         auto dst =  executeInstr->outputDestination;
+
         for(Mdfi * outDest : dst)
         {
             {
@@ -112,7 +114,7 @@ class Mdfg
                     m_firable.lock();
                     firable.push(outDest);
                     m_firable.unlock();
-                    cv.notify_one();
+                    cv.notify_all();
                 }
             }
         }
@@ -129,8 +131,10 @@ class Mdfg
         }
         Mdfi * getFirable()
         {
-            if(repository.empty())
+            if(repository.empty()) {
+                computation_done = true;
                 return nullptr;
+            }
 
             Mdfi *instr;
                     //std::cout<<"Firable size: "<<firable.size()<<std::endl;
@@ -139,7 +143,7 @@ class Mdfg
                 //if (!firable.empty()) {
                 //
                 // cv.wait(lc, [&] { return !(firable.empty()); });
-                while(firable.empty())
+                while(firable.empty() && !computation_done)
                 {
                     cv.wait(lc);
                     std::cout<<"[ " << std::this_thread::get_id()<<" ]"<<"Sticked here \n";
