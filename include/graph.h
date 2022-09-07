@@ -1,18 +1,27 @@
 #include <vector>
 #include "node.h"
+//#include "Mdfg.h"
+class Mdfg;
 
 class Graph{
 	std::vector<Node*> nodes;
 
 	private:
-	
-		std::vector<Node*> getIndepentNodes();
+	    Mdfg *g_mdf;
+		//std::vector<Node*> getIndepentNodes();
+        void perThreadWork();
+        unsigned thread_count;
+       Node* getIndependentNode();
 
-	public:
-		int addNode(Node&);
+
+public:
+        Graph();
+		int addNode(Node*);
 		void printNodes();
-		int compute();
+		void compute();
+        void compute_seq();
 		std::vector<Node*> getNodes();
-		std::vector<std::vector<Node*>> getSortedPerLevel();
+		//std::vector<std::vector<Node*>> getSortedPerLevel();
 
+        void setUpParallelComp(int);
 };

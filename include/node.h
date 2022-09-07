@@ -4,7 +4,7 @@
 #include <ostream>
 #include <functional>
 #include <vector>
-
+//#include "graph.h"
 class Graph;
 
 class Node{
@@ -23,7 +23,7 @@ class Node{
 		//copy constructor
 		Node(const Node& ){ std::cout<<"Copy constructor invoked!"<<std::endl;};
 		//int addDependant(Node);
-		int addDependence(Node&);
+		int addDependence(Node*);
 		void addCompute(std::function<void()>);
 
 		std::vector<Node *> getDependant();

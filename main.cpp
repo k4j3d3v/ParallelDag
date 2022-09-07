@@ -1,10 +1,11 @@
-#include "MDFG.cpp"
 #include <iostream>
-#include <thread>
-#include <vector>
+#include <cmath>
+#include "include/graph.h"
+#include "utimer.cpp"
 
-int main()
-{
+#define CYCLE 100000
+
+int main(int argc, char *argv[]) {
 
     /*
      *    /-> (B) \-v
@@ -13,90 +14,215 @@ int main()
      *   \             |
      *    \-> (E) --> (F)
      */
-	Graph g;
+    int nw = 0;
+    if (argc > 1)
+        nw = atoi(argv[1]);
+    std::cout << "Specified num of worker: " << nw << std::endl;
 
-    /*Node A(1,0,3,&g);
-    Node B(2,1,1,&g);
-	Node C(3,1,1,&g);
-    Node D(4,2,1,&g);
-    Node E(5,1,1,&g);
-    Node F(6,1,1,&g);
-*/
+    Graph g;
+    //            id, in, out
+    Node *A = new Node(1, 0, 40, &g);
+    Node *B = new Node(2, 1, 0, &g);
+    Node *C = new Node(3, 1, 0, &g);
+    Node *D = new Node(4, 1, 0, &g);
+    Node *E = new Node(5, 1, 0, &g);
+    Node *F = new Node(6, 1, 0, &g);
+    Node *G = new Node(7, 1, 0, &g);
+    Node *H = new Node(8, 1, 0, &g);
+    Node *I = new Node(9, 1, 0, &g);
+    Node *J = new Node(10, 1, 0, &g);
+    Node *K = new Node(11, 1, 0, &g);
 
-    Node A(1,0,3,&g);
-    Node B(2,1,1,&g);
-    Node C(3,1,1,&g);
-    Node D(4,2,1,&g);
-    Node E(5,1,1,&g);
-    Node F(6,1,1,&g);
 
-	B.addDependence(A); 
-	C.addDependence(A); 
-	D.addDependence(B);
-	D.addDependence(C);
-    E.addDependence(A);
-    F.addDependence(E);
-    D.addDependence(F);
-	g.addNode(C);
-	g.addNode(A);
-	g.addNode(B); 
-	g.addNode(D);
+    B->addDependence(A);
+
+    C->addDependence(A);
+
+    D->addDependence(A);
+
+    E->addDependence(A);
+
+    F->addDependence(A);
+
+    G->addDependence(A);
+
+
+    H->addDependence(A);
+
+    I->addDependence(A);
+
+    J->addDependence(A);
+
+    K->addDependence(A);
+
+
+    float x = 1269.45, ab, ac;
+    A->addCompute([&]() {
+        utimer t("A task: ");
+        ab = x + 1;
+        ac = x + 1;
+
+        for (int i = 0; i < CYCLE; i++) {
+            ab = sin(sin(sin(ab + i)));
+            ac = cos(cos(sin(ac))) + i;
+
+        }
+
+
+    });
+    float bd, be, bf, bg;
+    B->addCompute([&]() {
+
+
+        bd = be = bf = bg = ab + 1;
+        for (int i = 0; i < CYCLE; i++) {
+            bg = sin(sin(sin(bg)));
+            be = sin(pow(ab, i) + sqrt(i * ab));
+
+            bf = sin(pow(ab, i) + pow(i * ab, i));
+            bd = cos(1 + ab) + sqrt(i + pow(ab, bf));
+        }
+    });
+    float ch, ci, cj, ck;
+    C->addCompute([&]() {
+
+        ch = ac + 1;
+        for (int i = 0; i < CYCLE; i++) {
+
+            ch = cos(cos(sin(ch))) + 5;
+            ci = sin(pow(ac, i) + sqrt(i * ch));
+            cj = sin(pow(i, ab) + sqrt(ci * ab));
+            ck = tan(scalbln(ab, i) + sqrt(i * ab));
+
+        }
+
+    });
+    D->addCompute([&]() {
+        int res = 1;
+        for (int i = 0; i < CYCLE; i++) {
+            res *= pow(bd, i);
+
+        }
+
+    });
+
+    E->addCompute([&]() {
+
+
+        float res = 0;
+        for (int i = 0; i < CYCLE; i++) {
+            res += cos(i + be) + be * i;
+
+        }
+    });
+    F->addCompute([&]() {
+
+        bf += 1;
+        for (int i = 0; i < CYCLE; i++) {
+            bf *= sin(bf) + pow(bf, i) + i * bf;
+
+        }
+
+    });
+    int out;
+    G->addCompute([&]() {
+
+        bg = bg + 1;
+        double s = 0;
+        for (int i = 0; i < CYCLE; i++) {
+            s = sqrt(bg + i) + pow(bg, i + 1);
+        }
+        out += s;
+    });
+    double out_2 = 1;
+    H->addCompute([&]() {
+
+        out_2 = ch;
+        for (int i = 0; i < CYCLE; i++) {
+            ch = pow(ch, i) + sqrt(i * ch) + i;
+        }
+    });
+    float res;
+    I->addCompute([&]() {
+
+
+        for (int i = 0; i < CYCLE; i++) {
+            res = cos(cos(cos(ci))) + pow(ci, i) + sqrt(ci * i) + sin(pow(i, ci));
+
+        }
+
+    });
+    J->addCompute([&]() {
+
+
+        for (int i = 0; i < CYCLE; i++) {
+            res = cos(cos(cos(cj))) + pow(cj, i) + sqrt(cj * i) + sin(pow(i, cj));
+
+        }
+
+    });
+    K->addCompute([&]() {
+
+
+        for (int i = 0; i < CYCLE; i++) {
+            res = cos(cos(cos(ck))) + cos(cos(sin(ck))) + sqrt(ac * i) + sin(pow(i * ac, ck));
+
+        }
+
+    });
+
+
+    Node *n;
+    for(int i = 0, s_id = 12; i< 30; i++)
+    {
+        n = new Node(s_id+i, 1, 0, &g );
+        n->addCompute([&]() {
+
+
+            //std::cout<<"Node n. "<<s_id+i<< std::endl;
+            for (int i = 0; i < CYCLE; i++) {
+                res = cos(cos(cos(ck))) + cos(cos(sin(ck))) +  sqrt(ac*i) + sin(pow(i*ac,ck));
+
+            }
+
+        });
+        n->addDependence(A);
+        g.addNode(n);
+
+    }
+
+
+    g.addNode(A);
+    g.addNode(B);
+    g.addNode(C);
+    g.addNode(D);
     g.addNode(E);
     g.addNode(F);
+    g.addNode(G);
+    g.addNode(H);
+    g.addNode(I);
+    g.addNode(J);
+    g.addNode(K);
 
-    auto s = []{std::this_thread::sleep_for(std::chrono::seconds(2));};
-	A.addCompute([s]{s(); std::cout<<"Hi it's A task \n";});
-	B.addCompute([s]{std::cout<<"Hi it's B task \n";s();});
-	C.addCompute([s]{std::cout<<"Hi it's C task \n";s();});
-	D.addCompute([s]{s();std::cout<<"Hi it's D task \n";});
-    E.addCompute([s]{s();std::cout<<"Hi it's E task \n";});
-    F.addCompute([s]{std::cout<<"Hi it's F task \n";s();});
+    std::cout << "Nodes before any operation: \n";
+    g.printNodes();
 
-	std::cout<<"Nodes before any operation: \n";
-	g.printNodes();
-	
-    Mdfg g_mdf(&g);
-    auto work = [&]{
-        std::cout<<"[ " << std::this_thread::get_id()<<" ]\n";
-        while (true) {
-            Mdfi *f = g_mdf.getFirable();
-            if(f != nullptr) {
-                std::cout << "[ "<<std::this_thread::get_id()<<" ] Executing instruction dag n. " << f->dagNode->id << std::endl;
-                f->run();
-                g_mdf.sendToken(f);
-            }
-            else //if(g_mdf.countMissingInstructions() == 0)
-            {
-                std::cout<<"[ " << std::this_thread::get_id()<<" ]"<< " Computation finished\n";
-                return;
-            }
-        }
-    };
-    unsigned const thread_count = 4;//std::thread::hardware_concurrency();
-    std::cout<<"Worker num: "<<thread_count<< std::endl;
-    std::vector<std::thread> threads;
-    for(unsigned i=0; i < thread_count; i++)
+    // Mdfg g_mdf(&g);
     {
-        std::cout<<"Spawned \n";
-        threads.push_back(std::thread(work));
+        utimer t("Par");
+        g.setUpParallelComp(nw);
+        g.compute();
     }
+    std::cout << "RES: " << res << std::endl;
+    std::cout << "x: " << x << std::endl;
+//    {
+//        utimer t("SEQ");
+//        g.setUpParallelComp();
+//        g.compute_seq();
+//    }
 
-    for(unsigned i=0;i<threads.size();++i)
-    {
-        std::cout<<"Joining thread:  "<<threads[i].get_id()<< std::endl;
-        if(threads[i].joinable())
-            threads[i].join();
-        else
-            std::cout<<"Not Joinable thread:  "<<threads[i].get_id()<< std::endl;
+    std::cout << "RES: " << res << std::endl;
 
-    }
-
-    std::cout<<"REP size: "<<g_mdf.countMissingInstructions()<<std::endl;
-
-/*    f = g_mdf.getFirable();
-    std::cout<<"Executing instruction dag n. "<<f->dagNode->id<<std::endl;
-    f->run();*/
-    //std::cout<<"First node is firable? "<<f->checkFirable()<<" Node id: "<<f->dagNode->id<<std::endl;
-    std::cout<<"Finished!\n";
+    std::cout << "Finished!\n";
     return 0;
 }
