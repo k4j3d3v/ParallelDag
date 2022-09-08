@@ -8,6 +8,7 @@
 #include <thread>
 Graph::Graph() {
 
+
 }
 int Graph::addNode(Node *node)
 {
@@ -59,22 +60,15 @@ Node* Graph::getIndependentNode()
 }
 void Graph::compute() {
     std::cout<<"Starting computations \n";
-    std::vector<std::thread> threads;
-    for(unsigned i=0; i < thread_count; i++)
-    {
-        //std::cout<<"Spawned \n";
-        threads.push_back(std::thread(&Graph::perThreadWork, this));
-    }
+//    std::vector<std::thread> threads;
+//    std::function<void()> thW = std::bind(&Graph::perThreadWork, this);
+//    tp.submit(thW);
+//
+//    tp.run(thread_count);
+//
+//    tp.join();
+    g_mdf->start(thread_count);
 
-    for(unsigned i=0;i<threads.size();++i)
-    {
-        std::cout<<"Joining thread:  "<<threads[i].get_id()<< std::endl;
-        if(threads[i].joinable())
-            threads[i].join();
-        else
-            std::cout<<"Not Joinable thread:  "<<threads[i].get_id()<< std::endl;
-
-    }
 
 }
 void Graph::compute_seq() {

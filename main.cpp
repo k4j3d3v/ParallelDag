@@ -20,7 +20,7 @@ int main(int argc, char *argv[]) {
     std::cout << "Specified num of worker: " << nw << std::endl;
 
     Graph g;
-    //            id, in, out
+//    //            id, in, out
     Node *A = new Node(1, 0, 40, &g);
     Node *B = new Node(2, 1, 0, &g);
     Node *C = new Node(3, 1, 0, &g);
@@ -173,13 +173,13 @@ int main(int argc, char *argv[]) {
 
 
     Node *n;
-    for(int i = 0, s_id = 12; i< 30; i++)
+    for(int k = 0, s_id = 12; k< 30; k++)
     {
-        n = new Node(s_id+i, 1, 0, &g );
+        n = new Node(s_id+k, 1, 0, &g );
         n->addCompute([&]() {
 
 
-            //std::cout<<"Node n. "<<s_id+i<< std::endl;
+            std::cout<<"Node n. "<<(s_id+k)<< std::endl;
             for (int i = 0; i < CYCLE; i++) {
                 res = cos(cos(cos(ck))) + cos(cos(sin(ck))) +  sqrt(ac*i) + sin(pow(i*ac,ck));
 
@@ -204,22 +204,32 @@ int main(int argc, char *argv[]) {
     g.addNode(J);
     g.addNode(K);
 
+
     std::cout << "Nodes before any operation: \n";
     g.printNodes();
-
-    // Mdfg g_mdf(&g);
+//    Node A(1,0,2,&g); Node B(2,1,1,&g); Node C(3,1,1,&g); Node D(4,2,1,&g);
+//    //A.addDep(B); A.addDep(C); B.addDep(D); C.addDep(D);
+//    B.addDependence(&A);
+//    C.addDependence(&A);
+//    D.addDependence(&B);
+//    D.addDependence(&C);
+//    int x= 9, yb,yc, zb,zc, res;
+//    auto print = [](char id){std::cout<<"["<<std::this_thread::get_id()<<"] Runnning task "<<id<<std::endl;};
+//    A.addCompute([&]() {print('A');  yb = x-1; yc = x+1; });
+//    B.addCompute([&]() { print('B'); zb = yb*2; });
+//    C.addCompute([&]() { print('C');zc = yc*3; });
+//    D.addCompute([&]() { print('D');res = zb+zc; });
+//
+//    g.addNode(&A);
+//    g.addNode(&B);
+//    g.addNode(&C);
+//    g.addNode(&D);
     {
         utimer t("Par");
         g.setUpParallelComp(nw);
         g.compute();
     }
-    std::cout << "RES: " << res << std::endl;
-    std::cout << "x: " << x << std::endl;
-//    {
-//        utimer t("SEQ");
-//        g.setUpParallelComp();
-//        g.compute_seq();
-//    }
+
 
     std::cout << "RES: " << res << std::endl;
 

@@ -7,6 +7,7 @@
 #include "node.h"
 //#include "graph.h"
 #include "Mdfi.h"
+#include "../ThreadPool.cpp"
 #include <iostream>
 #include <queue>
 #include <vector>
@@ -23,7 +24,8 @@ class Mdfg {
         std::mutex m_firable;
         std::condition_variable cv;
         bool computation_done = false;
-
+        thread_pool tp;
+        void fireInstr(Mdfi *);
 
     public:
 
@@ -34,6 +36,9 @@ class Mdfg {
         unsigned countMissingInstructions();
 
         Mdfi *getFirable();
+
+        void start(int);
+
 };
 
 #endif //PARALLELDAG_MDFG_H

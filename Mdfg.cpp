@@ -12,84 +12,68 @@ Mdfg::Mdfg(Graph * dag){
                 else
                     repository.push_back(instr);
             }
-           // std::cout<<"nope";
             for(int i = 0; i < firable.size(); i++)
             {
                Mdfi * instr = firable.front();
                std::vector<Node *> depNodes = instr->dagNode->getDependant();
-               for(auto &node : depNodes)
+               for(auto node : depNodes)
                    instr->addOuputDest(mapNodeMdfi[node]);
+               auto fi = std::bind(&Mdfg::fireInstr, this, instr);
+               tp.submit(fi);
             }
-            for(auto & instr : repository)
+            for(auto instr : repository)
             {
                auto depNodes = instr->dagNode->getDependant();
-               for(auto &node : depNodes)
+               for(auto node : depNodes)
                    instr->addOuputDest(mapNodeMdfi[node]);
             }
-
         }
+
+void Mdfg::fireInstr(Mdfi *instr)
+{
+    instr->run();
+    sendToken(instr);
+
+}
  void Mdfg::sendToken(Mdfi * executeInstr){
     auto dst =  executeInstr->outputDestination;
 
     for(Mdfi * outDest : dst)
     {
-     //   {
-//                std::lock_guard lc(m_firable);
+
             outDest->missingToken--;
             if (outDest->missingToken == 0) {
                 std::erase(repository, outDest);
                 outDest->setFirable();
-                m_firable.lock();
-                firable.push(outDest);
-                m_firable.unlock();
-                cv.notify_all();
+                //firable.push(outDest);
+                auto fi = std::bind(&Mdfg::fireInstr, this, outDest);
+                tp.submit(fi);
             }
-       // }
     }
 
 }
-        /*void compile()
-        {
-            for(auto instr : repository)
-                instr.compile();
-        }*/
 
 unsigned Mdfg::countMissingInstructions()
 {
     return repository.size();
 }
-
+void Mdfg::start(int nw)
+{
+    tp.run(nw);
+    tp.join();
+}
 Mdfi * Mdfg::getFirable()
 {
     if(repository.empty() && firable.empty()) {
         computation_done = true;
-        cv.notify_all();
         return nullptr;
     }
 
     Mdfi *instr;
-    {
-        std::stringstream ss;
-        ss<<"[ "<<std::this_thread::get_id()<<" ] "<<" getFirable";
-        utimer t(ss.str());
-        std::unique_lock lc(m_firable);
-        //if (!firable.empty()) {
-        //
-         cv.wait(lc, [&] { return !firable.empty() || computation_done; });
-      /*  while(firable.empty() && !computation_done)
-        {
-            cv.wait(lc);
-           // std::cout<<"[ " << std::this_thread::get_id()<<" ]"<<"Sticked here \n";
-        }*/
-        instr = firable.front();
-        firable.pop();
+    instr = firable.front();
+    firable.pop();
 
-    }
     return instr;
-
-        //}
-
-   //std::cout<<"Repository before end: "<<repository.size()<< std::endl;
 }
 
         

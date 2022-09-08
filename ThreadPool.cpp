@@ -6,7 +6,6 @@
 #include <atomic>
 #include <latch>
 #include "ThreadSafeQueue.cpp"
-#include "JoinThreads.cpp"
 
 class thread_pool
 {
@@ -20,7 +19,6 @@ class thread_pool
     //std::chrono::system_clock::time_point start; 
     void worker_thread()
     {
-        std::cout << "[ "<<std::this_thread::get_id()<<" ] Executing instruction"<<std::endl;
         while(!work_queue.empty())
         {
             std::function<void()> task;
@@ -88,7 +86,7 @@ class thread_pool
 
         {
             std::cout<<"SUBMIT! \n";
-            work_queue.push(std::function<void()>(f));
+            work_queue.push(std::function<void()>(static_cast<const std::function<void()>>(f)));
     
         }
 };

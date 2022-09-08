@@ -1,5 +1,6 @@
 #include <vector>
 #include "node.h"
+//#include "../ThreadPool.cpp"
 //#include "Mdfg.h"
 class Mdfg;
 
@@ -21,7 +22,6 @@ public:
 		void compute();
         void compute_seq();
 		std::vector<Node*> getNodes();
-		//std::vector<std::vector<Node*>> getSortedPerLevel();
 
         void setUpParallelComp(int);
 };
