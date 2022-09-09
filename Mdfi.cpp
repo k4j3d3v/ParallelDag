@@ -1,10 +1,14 @@
 #include "include/Mdfi.h"
 
-Mdfi::Mdfi(Node * node):dagNode(node),inputToken(node->input_arity),\
-        outputToken(node->out_arity),missingToken(inputToken)
+Mdfi::Mdfi(Node * node):dagNode(node),inputToken(node->input_size),\
+        outputToken(node->out_arity),missingToken(node->input_arity)
 {
     //outputDestination = node->getDependant();
-    firable = inputToken == 0;
+    firable = missingToken == 0;
+    if(inputToken==0)
+        inputs.resize(this->missingToken);
+    else
+        inputs.resize(inputToken);
     if(node->id==1)
     {
         std::cout<<"Node 1, in arity: "<<node->input_arity<<" inputToken: "\
@@ -27,9 +31,9 @@ bool Mdfi::checkFirable()
 {
     return missingToken == 0;
 }
-void Mdfi::run()
+std::vector<int> Mdfi::run(vector<int> flattenedInputs)
 {
-    this->dagNode->getTask()();
+    return this->dagNode->getTask()(flattenedInputs);
 }
 // from project specification assuming to work by side effect
 /*void sendToken(){

@@ -7,7 +7,7 @@ Mdfg::Mdfg(Graph * dag){
             for (auto node : dag->getNodes()) {
                 Mdfi * instr = new Mdfi(node);
                 mapNodeMdfi[node]=instr;
-                if(instr->firable)
+                if(instr->checkFirable())
                     firable.push(instr);
                 else
                     repository.push_back(instr);
@@ -28,24 +28,36 @@ Mdfg::Mdfg(Graph * dag){
             }
 
         }
- void Mdfg::sendToken(Mdfi * executeInstr){
+ void Mdfg::sendToken(Mdfi * executeInstr, std::vector<int> inputs){
     auto dst =  executeInstr->outputDestination;
-
-    for(Mdfi * outDest : dst)
+    if(dst.empty())
     {
-     //   {
-//                std::lock_guard lc(m_firable);
-            outDest->missingToken--;
-            if (outDest->missingToken == 0) {
-                std::erase(repository, outDest);
-                outDest->setFirable();
-                m_firable.lock();
-                firable.push(outDest);
-                m_firable.unlock();
-                cv.notify_all();
-            }
-       // }
+
+        for(auto i : inputs)
+            std::cout<<(i)<<std::endl;
+
     }
+    else
+
+        for(Mdfi * outDest : dst)
+        {
+         //   {
+    //                std::lock_guard lc(m_firable);
+                outDest->missingToken--;
+                int pos = executeInstr->dagNode->offset_input[outDest->dagNode];
+                //here?
+                outDest->inputs[pos]=inputs;
+                if (outDest->missingToken == 0) {
+                    std::erase(repository, outDest);
+
+                    outDest->setFirable();
+                    m_firable.lock();
+                    firable.push(outDest);
+                    m_firable.unlock();
+                    cv.notify_all();
+                }
+           // }
+        }
 
 }
         /*void compile()
@@ -57,6 +69,16 @@ Mdfg::Mdfg(Graph * dag){
 unsigned Mdfg::countMissingInstructions()
 {
     return repository.size();
+}
+
+std::vector<Mdfi *> Mdfg::getSources()
+{
+    std::vector<Mdfi *> sourceInstr;
+    for(int i = 0; i < firable.size(); i++)
+    {
+        sourceInstr.emplace_back(firable.front());
+    }
+    return  sourceInstr;
 }
 
 Mdfi * Mdfg::getFirable()

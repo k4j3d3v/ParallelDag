@@ -7,23 +7,27 @@
 #include "node.h"
 #include <vector>
 
+template<typename T>
+using vector = std::vector<T>;
 class Mdfi {
     private:
-        int inputToken;
+         // TO BE USED ONLY FOR SOURCE INSTR
         int outputToken;
     public:
 
         Node * dagNode;
         bool firable;
         int missingToken;
+        int inputToken;
 
-        std::vector<Mdfi *> outputDestination;
+        vector<Mdfi *> outputDestination;
+        vector<vector<int>> inputs;
 
         Mdfi(Node * node);
         bool addOuputDest(Mdfi * dest);
         void setFirable();
         bool checkFirable();
-        void run();
+        vector<int> run(vector<int>);
 
 
 

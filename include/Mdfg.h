@@ -29,9 +29,10 @@ class Mdfg {
 
         Mdfg(Graph *dag);
 
-        void sendToken(Mdfi *executeInstr);
+        void sendToken(Mdfi *executeInstr, std::vector<int> inputs);
 
         unsigned countMissingInstructions();
+        std::vector<Mdfi *> getSources();
 
         Mdfi *getFirable();
 };

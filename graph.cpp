@@ -38,8 +38,18 @@ void Graph::perThreadWork() {
         if(f != nullptr) {
 
             std::cout << "[ "<<std::this_thread::get_id()<<" ] Executing instruction dag n. " << f->dagNode->id << std::endl;
-            f->run();
-            g_mdf->sendToken(f);
+
+            std::vector<int> flattenedInput;
+            for(auto && v : f->inputs){
+                flattenedInput.insert(flattenedInput.end(), v.begin(), v.end());
+            }
+//            std::cout<<"\n\n TRANSFORMATION OUTPUT: \n\n";
+//            for(auto i : flattenedInput)
+//                std::cout<<(i)<<std::endl;
+
+
+            auto output = f->run(flattenedInput);
+            g_mdf->sendToken(f, output);
         }
         else
         {
@@ -57,8 +67,17 @@ Node* Graph::getIndependentNode()
     }
     return nullptr;
 }
-void Graph::compute() {
+void Graph::compute(std::vector<int> sourceInput) {
     std::cout<<"Starting computations \n";
+    auto sourceInstr = g_mdf->getSources();
+    int i = 0;
+    for(auto instr : sourceInstr) {
+        std::vector<int> forInstrIn;
+        for (; i < instr->inputToken; i++) {
+            forInstrIn.push_back(sourceInput[i]);
+        }
+        instr->inputs[0]=forInstrIn;
+    }
     std::vector<std::thread> threads;
     for(unsigned i=0; i < thread_count; i++)
     {

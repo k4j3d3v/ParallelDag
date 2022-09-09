@@ -18,7 +18,7 @@ public:
         Graph();
 		int addNode(Node*);
 		void printNodes();
-		void compute();
+		void compute(std::vector<int>);
         void compute_seq();
 		std::vector<Node*> getNodes();
 		//std::vector<std::vector<Node*>> getSortedPerLevel();
