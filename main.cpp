@@ -21,50 +21,204 @@ int main(int argc, char *argv[]) {
     std::cout << "Specified num of worker: " << nw << std::endl;
 
     Graph g;
-    //            id, in, out, input_tot
-    Node A(1,0,2,1);
-    Node B(2,1,1);
-    Node C(3,1,1);
-    Node D(4,2,0);
-    A.addDependant(&B);
-    A.addDependant(&C);
-    B.addDependant(&D);
-    C.addDependant(&D);
-//    B.addDependence(&A);
-//    C.addDependence(&A);
-//    D.addDependence(&B);
-//    D.addDependence(&C);
-    auto print = [](char id){std::cout<<"["<<std::this_thread::get_id()<<"] Runnning task "<<id<<std::endl;};
-    A.addCompute([&print](std::vector<int> v) {print('A'); int x = v[0]; int yb = x-1; int yc = x+1;
-        return std::vector{yb, yc} ;});
-    B.addCompute([&print](std::vector<int> v) { print('B'); int yb = v[0]; int zb = yb*2;
-        return std::vector{zb} ; });
-    C.addCompute([&print](std::vector<int> v) { print('C'); int yc = v[1]; int zc = yc*3;
-        return std::vector{zc} ; });
-    D.addCompute([&print](std::vector<int> v) { print('D');int zb = v[0], zc = v[1]; int res = zb+zc;
-        return std::vector{res} ;});
+//    //            id, in, out
+    Node *A = new Node(1, 0, 40, 1);
+    Node *B = new Node(2, 1, 0);
+    Node *C = new Node(3, 1, 0);
+    Node *D = new Node(4, 1, 0);
+    Node *E = new Node(5, 1, 0);
+    Node *F = new Node(6, 1, 0);
+    Node *G = new Node(7, 1, 0);
+    Node *H = new Node(8, 1, 0);
+    Node *I = new Node(9, 1, 0);
+    Node *J = new Node(10, 1, 0);
+    Node *K = new Node(11, 1, 0);
 
-    g.addNode(&A);
-    g.addNode(&B);
-    g.addNode(&C);
-    g.addNode(&D);
+    A->addDependant(B);
+    A->addDependant(C);
+    A->addDependant(D);
+    A->addDependant(E);
+    A->addDependant(F);
+    A->addDependant(G);
+    A->addDependant(H);
+    A->addDependant(I);
+    A->addDependant(J);
+    A->addDependant(K);
+
+    using vector = std::vector<int>;
+
+    A->addCompute([](vector in) {
+
+        float x = in[0];
+        float ab = x + 1;
+        float ac = x + 1;
+
+        for (int i = 0; i < CYCLE; i++) {
+            ab = sin(sin(sin(ab + i)));
+            ac = cos(cos(sin(ac))) + i;
+
+        }
+        return vector {static_cast<int>(ab),static_cast<int>(ac)};
+
+    });
+    B->addCompute([](vector in) {
+
+        float bd, be, bf, bg, ab = in[0];
+
+        bd = be = bf = bg = ab + 1;
+        for (int i = 0; i < CYCLE; i++) {
+            bg = sin(sin(sin(bg)));
+            be = sin(pow(ab, i) + sqrt(i * ab));
+
+            bf = sin(pow(ab, i) + pow(i * ab, i));
+            bd = cos(1 + ab) + sqrt(i + pow(ab, bf));
+        }
+        return vector {static_cast<int>(bd),static_cast<int>(be),static_cast<int>(bf), static_cast<int>(bg)};
+
+    });
+    C->addCompute([](vector in) {
+        float ch, ci, cj, ck,ac=in[0], ab=0;
+
+        ch = ac + 1;
+        for (int i = 0; i < CYCLE; i++) {
+
+            ch = cos(cos(sin(ch))) + 5;
+            ci = sin(pow(ac, i) + sqrt(i * ch));
+            cj = sin(pow(i, ab) + sqrt(ci * ab));
+            ck = tan(scalbln(ab, i) + sqrt(i * ab));
+
+        }
+        return vector {static_cast<int>(ch),static_cast<int>(ci),static_cast<int>(cj), static_cast<int>(ck)};
+    });
+
+    D->addCompute([](vector in) {
+        int res = 1;
+        float bd = in[0];
+        for (int i = 0; i < CYCLE; i++) {
+            res *= pow(bd, i);
+
+        }
+        return vector {static_cast<int>(res)};
+
+    });
+
+    E->addCompute([](vector in) {
+
+        float res = 0;
+        float be = in[0];
+        for (int i = 0; i < CYCLE; i++) {
+            res += cos(i + be) + be * i;
+        }
+        return vector {static_cast<int>(res)};
+
+    });
+    F->addCompute([](vector in) {
+        float bf = in[0];
+        bf += 1;
+        for (int i = 0; i < CYCLE; i++) {
+            bf *= sin(bf) + pow(bf, i) + i * bf;
+
+        }
+        return vector {static_cast<int>(bf)};
+
+    });
+    G->addCompute([](vector in) {
+        float bg = in[0];
+        int out=0;
+        bg = bg + 1;
+        double s = 0;
+        for (int i = 0; i < CYCLE; i++) {
+            s = sqrt(bg + i) + pow(bg, i + 1);
+        }
+        out += s;
+        return vector {static_cast<int>(out)};
+
+    });
+    H->addCompute([](vector in) {
+        float ch = in[0];
+        for (int i = 0; i < CYCLE; i++) {
+            ch = pow(ch, i) + sqrt(i * ch) + i;
+        }
+        return vector {static_cast<int>(ch)};
+
+    });
+    float res;
+    I->addCompute([](vector in) {
+        float ci = in[0], res;
+
+        for (int i = 0; i < CYCLE; i++) {
+            res = cos(cos(cos(ci))) + pow(ci, i) + sqrt(ci * i) + sin(pow(i, ci));
+        }
+
+        return vector {static_cast<int>(res)};
+
+    });
+    J->addCompute([](vector in) {
+
+        float cj = in[0], res;
+
+        for (int i = 0; i < CYCLE; i++) {
+            res = cos(cos(cos(cj))) + pow(cj, i) + sqrt(cj * i) + sin(pow(i, cj));
+
+        }
+        return vector {static_cast<int>(res)};
+
+
+    });
+    K->addCompute([](vector in) {
+        float ck = in[0];
+        float ac = ck*3,res;
+        for (int i = 0; i < CYCLE; i++) {
+            res = cos(cos(cos(ck))) + cos(cos(sin(ck))) + sqrt(ac * i) + sin(pow(i * ac, ck));
+
+        }
+        return vector {static_cast<int>(res)};
+
+    });
+
+
+    Node *n;
+    for(int k = 0, s_id = 12; k< 30; k++)
+    {
+        n = new Node(s_id+k, 1, 0);
+        n->addCompute([&](vector in) {
+            float ck = in[0];
+            float ac = ck*3,res;
+
+            std::cout<<"Node n. "<<(s_id+k)<< std::endl;
+            for (int i = 0; i < CYCLE; i++) {
+                res = cos(cos(cos(ck))) + cos(cos(sin(ck))) +  sqrt(ac*i) + sin(pow(i*ac,ck));
+
+            }
+            return vector {static_cast<int>(res)};
+
+        });
+        A->addDependant(n);
+        g.addNode(n);
+
+    }
+
+
+    g.addNode(A);
+    g.addNode(B);
+    g.addNode(C);
+    g.addNode(D);
+    g.addNode(E);
+    g.addNode(F);
+    g.addNode(G);
+    g.addNode(H);
+    g.addNode(I);
+    g.addNode(J);
+    g.addNode(K);
 
     std::cout << "Nodes before any operation: \n";
     g.printNodes();
 
-    // Mdfg g_mdf(&g);
     {
         utimer t("Par");
         g.setUpParallelComp(nw);
         g.compute(std::vector{9});
     }
-//    std::cout << "RES: " << res << std::endl;
-//    std::cout << "x: " << x << std::endl;
-//    {
-//        utimer t("SEQ");
-//        g.setUpParallelComp();
-//        g.compute_seq();
-//    }
 
 
     std::cout << "Finished!\n";

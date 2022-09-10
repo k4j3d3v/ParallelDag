@@ -9,11 +9,7 @@ Mdfi::Mdfi(Node * node):dagNode(node),inputToken(node->input_size),\
         inputs.resize(this->missingToken);
     else
         inputs.resize(inputToken);
-    if(node->id==1)
-    {
-        std::cout<<"Node 1, in arity: "<<node->input_arity<<" inputToken: "\
-                <<inputToken<<" firable? "<<firable<<" \n";
-    }
+
 }
 bool Mdfi::addOuputDest(Mdfi * dest)
 {

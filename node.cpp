@@ -24,10 +24,8 @@ Node::Node(int id, int in_a, int out_a):Node(id, in_a,out_a, 0) {}
 int Node::addDependence(Node *dp)
 {
 	std::cout<<"addDep method"<<std::endl;
-	//std::cout<<"HERE?"<<std::endl;
 	if(dependence.size() < input_arity)
 		Node::dependence.emplace_back(dp);
-	//std::cout<<"END HERE?"<<std::endl;
 
 	return 0;
 }

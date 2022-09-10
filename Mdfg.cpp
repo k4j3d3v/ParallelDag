@@ -14,7 +14,7 @@ Mdfg::Mdfg(Graph * dag){
                 else
                     repository.push_back(instr);
             }
-           // std::cout<<"nope";
+
             for(int i = 0; i < firable.size(); i++)
             {
                Mdfi * instr = firable.front();
@@ -35,16 +35,15 @@ Mdfg::Mdfg(Graph * dag){
     if(dst.empty())
     {
 
-        for(auto i : inputs)
-            std::cout<<(i)<<std::endl;
+//        for(auto i : inputs)
+//            std::cout<<(i)<<std::endl;
 
     }
     else
 
         for(Mdfi * outDest : dst)
         {
-         //   {
-    //                std::lock_guard lc(m_firable);
+
                 outDest->missingToken--;
                 int pos = executeInstr->dagNode->offset_input[outDest->dagNode];
                 //here?
@@ -58,7 +57,6 @@ Mdfg::Mdfg(Graph * dag){
                     m_firable.unlock();
                     cv.notify_all();
                 }
-           // }
         }
 
 }
@@ -93,27 +91,16 @@ Mdfi * Mdfg::getFirable()
 
     Mdfi *instr;
     {
-        std::stringstream ss;
-        ss<<"[ "<<std::this_thread::get_id()<<" ] "<<" getFirable";
-        utimer t(ss.str());
         std::unique_lock lc(m_firable);
-        //if (!firable.empty()) {
-        //
+
          cv.wait(lc, [&] { return !firable.empty() || computation_done; });
-      /*  while(firable.empty() && !computation_done)
-        {
-            cv.wait(lc);
-           // std::cout<<"[ " << std::this_thread::get_id()<<" ]"<<"Sticked here \n";
-        }*/
+
         instr = firable.front();
         firable.pop();
 
     }
     return instr;
 
-        //}
-
-   //std::cout<<"Repository before end: "<<repository.size()<< std::endl;
 }
 
         

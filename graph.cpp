@@ -31,8 +31,6 @@ void Graph::setUpParallelComp(int nw)
         thread_count = std::thread::hardware_concurrency();
 }
 void Graph::perThreadWork() {
-    //std::cout << "[ "<<std::this_thread::get_id()<<" ] starting. " << std::endl;
-
     while (true) {
         Mdfi *f = g_mdf->getFirable();
         if(f != nullptr) {
@@ -82,7 +80,6 @@ void Graph::compute(std::vector<int> sourceInput) {
     std::vector<std::thread> threads;
     for(unsigned i=0; i < thread_count; i++)
     {
-        //std::cout<<"Spawned \n";
         threads.push_back(std::thread(&Graph::perThreadWork, this));
     }
 
