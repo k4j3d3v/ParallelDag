@@ -11,7 +11,8 @@ class Graph{
 		//std::vector<Node*> getIndepentNodes();
         void perThreadWork();
         unsigned thread_count;
-       Node* getIndependentNode();
+        Node* getIndependentNode();
+        void initializeSources(const std::vector<int> &sourceInput);
 
 
 public:
@@ -19,9 +20,10 @@ public:
 		int addNode(Node*);
 		void printNodes();
 		void compute(std::vector<int>);
-        void compute_seq();
+        void compute_seq(std::vector<int>);
 		std::vector<Node*> getNodes();
 		//std::vector<std::vector<Node*>> getSortedPerLevel();
 
         void setUpParallelComp(int);
+
 };

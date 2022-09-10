@@ -1,9 +1,11 @@
 #include "include/Mdfg.h"
 #include "include/graph.h"
 #include "utimer.cpp"
-
+#include <iostream>
 Mdfg::Mdfg(Graph * dag){
-
+#ifdef SEQ
+    std::cout<<"HEY MAIN!\n";
+#endif
             for (auto node : dag->getNodes()) {
                 Mdfi * instr = new Mdfi(node);
                 mapNodeMdfi[node]=instr;

@@ -1,3 +1,4 @@
+#define SEQ
 #include <iostream>
 #include <cmath>
 #include "include/graph.h"

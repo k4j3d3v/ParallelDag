@@ -43,10 +43,6 @@ void Graph::perThreadWork() {
             for(auto && v : f->inputs){
                 flattenedInput.insert(flattenedInput.end(), v.begin(), v.end());
             }
-//            std::cout<<"\n\n TRANSFORMATION OUTPUT: \n\n";
-//            for(auto i : flattenedInput)
-//                std::cout<<(i)<<std::endl;
-
 
             auto output = f->run(flattenedInput);
             g_mdf->sendToken(f, output);
@@ -67,8 +63,9 @@ Node* Graph::getIndependentNode()
     }
     return nullptr;
 }
-void Graph::compute(std::vector<int> sourceInput) {
-    std::cout<<"Starting computations \n";
+
+void Graph::initializeSources(vector<int> const &sourceInput)
+{
     auto sourceInstr = g_mdf->getSources();
     int i = 0;
     for(auto instr : sourceInstr) {
@@ -78,6 +75,10 @@ void Graph::compute(std::vector<int> sourceInput) {
         }
         instr->inputs[0]=forInstrIn;
     }
+}
+void Graph::compute(std::vector<int> sourceInput) {
+    std::cout<<"Starting computations \n";
+    initializeSources(sourceInput);
     std::vector<std::thread> threads;
     for(unsigned i=0; i < thread_count; i++)
     {
@@ -96,8 +97,9 @@ void Graph::compute(std::vector<int> sourceInput) {
     }
 
 }
-void Graph::compute_seq() {
-   perThreadWork();
+void Graph::compute_seq(std::vector<int> sourceInput) {
+    initializeSources(sourceInput);
+
 }
 void Graph::printNodes()
 {
