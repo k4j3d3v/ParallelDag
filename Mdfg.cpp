@@ -3,9 +3,6 @@
 #include "utimer.cpp"
 #include <iostream>
 Mdfg::Mdfg(Graph * dag){
-#ifdef SEQ
-    std::cout<<"HEY MAIN!\n";
-#endif
             for (auto node : dag->getNodes()) {
                 Mdfi * instr = new Mdfi(node);
                 mapNodeMdfi[node]=instr;
@@ -14,17 +11,22 @@ Mdfg::Mdfg(Graph * dag){
                 else
                     repository.push_back(instr);
             }
-
+            std::cout<<"Firable initial elements: \n";
             for(int i = 0; i < firable.size(); i++)
             {
                Mdfi * instr = firable.front();
-               std::vector<Node *> depNodes = instr->dagNode->getDependant();
+                std::cout<<"Instruction dag n. "<<instr->dagNode->id<<std::endl;
+
+                std::vector<Node *> depNodes = instr->dagNode->getDependant();
                for(auto &node : depNodes)
                    instr->addOuputDest(mapNodeMdfi[node]);
             }
+            std::cout<<"Repository initial elements: \n";
+
             for(auto & instr : repository)
             {
-               auto depNodes = instr->dagNode->getDependant();
+                std::cout<<"Instruction dag n. "<<instr->dagNode->id<<std::endl;
+                auto depNodes = instr->dagNode->getDependant();
                for(auto &node : depNodes)
                    instr->addOuputDest(mapNodeMdfi[node]);
             }
@@ -49,10 +51,12 @@ Mdfg::Mdfg(Graph * dag){
                 //here?
                 outDest->inputs[pos]=inputs;
                 if (outDest->missingToken == 0) {
+                 //   repository_m.lock();
                     std::erase(repository, outDest);
-
+                  //  repository_m.unlock();
                     outDest->setFirable();
                     m_firable.lock();
+                    std::cout<<"Pushing instruction n. "<<outDest->dagNode->id<<std::endl;
                     firable.push(outDest);
                     m_firable.unlock();
                     cv.notify_all();
@@ -83,21 +87,26 @@ std::vector<Mdfi *> Mdfg::getSources()
 
 Mdfi * Mdfg::getFirable()
 {
-    if(repository.empty() && firable.empty()) {
+    //repository_m.lock();
+    // m_firable.lock();
+    bool empty_r = repository.empty();
+    //repository_m.unlock();
+    bool empty_f = firable.empty();
+   // m_firable.unlock();
+    if(empty_r && empty_f) {
         computation_done = true;
         cv.notify_all();
         return nullptr;
     }
-
-    Mdfi *instr;
+    Mdfi *instr = nullptr;
     {
         std::unique_lock lc(m_firable);
 
          cv.wait(lc, [&] { return !firable.empty() || computation_done; });
-
-        instr = firable.front();
-        firable.pop();
-
+        if(!firable.empty()) {
+            instr = firable.front();
+            firable.pop();
+        }
     }
     return instr;
 

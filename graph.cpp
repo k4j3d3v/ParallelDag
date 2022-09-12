@@ -32,15 +32,18 @@ void Graph::setUpParallelComp(int nw)
 }
 void Graph::perThreadWork() {
     while (true) {
+
         Mdfi *f = g_mdf->getFirable();
         if(f != nullptr) {
 
             std::cout << "[ "<<std::this_thread::get_id()<<" ] Executing instruction dag n. " << f->dagNode->id << std::endl;
 
             std::vector<int> flattenedInput;
+            std::cout << "[ "<<std::this_thread::get_id()<<" ]  BEFORE Flattened" << std::endl;
             for(auto && v : f->inputs){
                 flattenedInput.insert(flattenedInput.end(), v.begin(), v.end());
             }
+            std::cout << "[ "<<std::this_thread::get_id()<<" ]  AFTER Flattened" << std::endl;
 
             auto output = f->run(flattenedInput);
             g_mdf->sendToken(f, output);
