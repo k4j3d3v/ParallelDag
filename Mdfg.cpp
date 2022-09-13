@@ -55,11 +55,15 @@ Mdfg::Mdfg(Graph * dag){
                     std::erase(repository, outDest);
                   //  repository_m.unlock();
                     outDest->setFirable();
+#ifndef SEQ
                     m_firable.lock();
+#endif
                     std::cout<<"Pushing instruction n. "<<outDest->dagNode->id<<std::endl;
                     firable.push(outDest);
+#ifndef SEQ
                     m_firable.unlock();
                     cv.notify_all();
+#endif
                 }
         }
 
@@ -95,14 +99,18 @@ Mdfi * Mdfg::getFirable()
    // m_firable.unlock();
     if(empty_r && empty_f) {
         computation_done = true;
+#ifndef SEQ
         cv.notify_all();
+#endif
         return nullptr;
     }
     Mdfi *instr = nullptr;
     {
+#ifndef SEQ
         std::unique_lock lc(m_firable);
 
-         cv.wait(lc, [&] { return !firable.empty() || computation_done; });
+        cv.wait(lc, [&] { return !firable.empty() || computation_done; });
+#endif
         if(!firable.empty()) {
             instr = firable.front();
             firable.pop();

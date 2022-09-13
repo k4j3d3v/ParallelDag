@@ -1,26 +1,11 @@
-#define SEQ
 #include <iostream>
 #include <cmath>
 #include "include/graph.h"
 #include "utimer.cpp"
-#include <execinfo.h>
-#include <signal.h>
-#include <stdlib.h>
-#include <unistd.h>
+
 
 #define CYCLE 100000
-void handler(int sig) {
-    void *array[10];
-    size_t size;
 
-    // get void*'s for all entries on the stack
-    size = backtrace(array, 10);
-
-    // print out all the frames to stderr
-    fprintf(stderr, "Error: signal %d:\n", sig);
-    backtrace_symbols_fd(array, size, STDERR_FILENO);
-    exit(1);
-}
 
 int main(int argc, char *argv[]) {
 
@@ -31,7 +16,7 @@ int main(int argc, char *argv[]) {
      *   \             |
      *    \-> (E) --> (F)
      */
-   signal(SIGSEGV, handler);   // install our handler
+
 
     int nw = 0;
     if (argc > 1)
@@ -235,7 +220,10 @@ int main(int argc, char *argv[]) {
     {
         utimer t("Par");
         g.setUpParallelComp(nw);
-        g.compute(std::vector{9});
+#ifdef SEQ
+        g.compute_seq(std::vector{9});
+#endif
+      g.compute(std::vector{9});
     }
 
 

@@ -19,8 +19,10 @@ class Mdfg {
     private:
 
         std::unordered_map<Node *, Mdfi *> mapNodeMdfi;
+#ifndef SEQ
         std::mutex m_firable, repository_m;
         std::condition_variable cv;
+#endif
         bool computation_done = false;
 
 

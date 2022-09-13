@@ -31,6 +31,9 @@ std::vector<int> Mdfi::run(vector<int> flattenedInputs)
 {
     return this->dagNode->getTask()(flattenedInputs);
 }
+
+
+
 // from project specification assuming to work by side effect
 /*void sendToken(){
     for(Mdfi * outDest : outputDestination)

@@ -24,11 +24,16 @@ std::vector<Node*> Graph::getNodes()
 
 void Graph::setUpParallelComp(int nw)
 {
+    #ifdef SEQ
+        std::cout<<"Seq mode \n";
+    #endif
     g_mdf = new Mdfg(this);
+#ifndef SEQ
     if(nw > 0)
         thread_count = nw;
     else
         thread_count = std::thread::hardware_concurrency();
+#endif
 }
 void Graph::perThreadWork() {
     while (true) {
@@ -97,8 +102,26 @@ void Graph::compute(std::vector<int> sourceInput) {
     }
 
 }
+
 void Graph::compute_seq(std::vector<int> sourceInput) {
     initializeSources(sourceInput);
+    Mdfi *f = g_mdf->getFirable();
+    while (f!=nullptr) {
+
+            std::cout << "[ "<<std::this_thread::get_id()<<" ] Executing instruction dag n. " << f->dagNode->id << std::endl;
+
+            std::vector<int> flattenedInput;
+            std::cout << "[ "<<std::this_thread::get_id()<<" ]  BEFORE Flattened" << std::endl;
+            for(auto && v : f->inputs){
+                flattenedInput.insert(flattenedInput.end(), v.begin(), v.end());
+            }
+            std::cout << "[ "<<std::this_thread::get_id()<<" ]  AFTER Flattened" << std::endl;
+
+            auto output = f->run(flattenedInput);
+            g_mdf->sendToken(f, output);
+
+        f = g_mdf->getFirable();
+    }
 
 }
 void Graph::printNodes()
