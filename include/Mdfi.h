@@ -14,23 +14,41 @@ class Mdfi {
     private:
          // TO BE USED ONLY FOR SOURCE INSTR
         int outputToken;
-    public:
 
         Node<T> * dagNode;
-        bool firable;
         int missingToken;
         int inputToken;
 
         vector<Mdfi *> outputDestination;
         vector<vector<int>> inputs;
 
-        Mdfi(Node<T> * node);
-        bool addOuputDest(Mdfi * dest);
-        void setFirable();
-        bool checkFirable();
-        vector<T> run(vector<T>);
+public:
 
+        Mdfi(Node<T> * node):dagNode(node),inputToken(node->input_size),\
+        outputToken(node->out_arity),missingToken(node->input_arity)
+        {
+            if(inputToken==0)
+                inputs.resize(this->missingToken);
+            else
+                inputs.resize(inputToken);
 
+        }
+        bool addOutputDest(Mdfi * dest)
+        {
+            if (outputDestination.size() < outputToken) {
+                outputDestination.emplace_back(dest);
+                return true;
+            }
+            return false;
+        }
+        bool checkFirable()
+        {
+            return missingToken == 0;
+        }
+        vector<T> run(vector<T> flattenedInputs)
+        {
+            return this->dagNode->getTask()(flattenedInputs);
+        }
 
 
 };
