@@ -24,8 +24,8 @@ class Node{
 //        std::vector<Node *> dependence;
         std::vector<Node<T> *> dependant;
 
-		Node();
-		Node(int,int,int);
+        Node();
+        Node(int,int,int);
         Node(int,int,int,int);
 
     //copy constructor

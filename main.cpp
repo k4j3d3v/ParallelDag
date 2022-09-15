@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cmath>
 #include "include/graph.h"
+//#include "graph.cpp"
 #include "utimer.cpp"
 
 
@@ -215,7 +216,7 @@ int main(int argc, char *argv[]) {
     g.addNode(K);
 
     std::cout << "Nodes before any operation: \n";
-    g.printNodes();
+//    g.printNodes();
 
     {
         utimer t("Par");

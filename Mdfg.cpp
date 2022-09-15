@@ -2,6 +2,7 @@
 #include "include/graph.h"
 #include "utimer.cpp"
 #include <iostream>
+template class Mdfg<int>;
 
 template<typename T>
 Mdfg<T>::Mdfg(Graph<T> * dag){

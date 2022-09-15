@@ -6,6 +6,7 @@
 #include <vector>
 
 #include <thread>
+
 template<typename T>
 Graph<T>::Graph() {
 
@@ -65,16 +66,16 @@ void Graph<T>::perThreadWork() {
         }
     }
 }
-template<typename T>
-Node<T>* Graph<T>::getIndependentNode()
-{
-    for (auto &n : nodes) {
-        if(n->dependence.empty())
-            return n;
-            //v.push_back(n);
-    }
-    return nullptr;
-}
+//template<typename T>
+//Node<T>* Graph<T>::getIndependentNode()
+//{
+//    for (auto &n : nodes) {
+//        if(n->dependence.empty())
+//            return n;
+//            //v.push_back(n);
+//    }
+//    return nullptr;
+//}
 template<typename T>
 void Graph<T>::initializeSources(vector<T> const &sourceInput)
 {
@@ -131,10 +132,11 @@ void Graph<T>::compute_seq(std::vector<T> sourceInput) {
     }
 
 }
-template<typename T>
-void Graph<T>::printNodes()
-{
-	for (auto i: nodes)
-		std::cout << (*i) << ' ';
-}
+
+//template<typename T>
+//void Graph<T>::printNodes()
+//{
+//	for (auto i: nodes)
+//		std::cout << (*i) << ' ';
+//}
 

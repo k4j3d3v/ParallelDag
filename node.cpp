@@ -3,6 +3,8 @@
 #include <algorithm> 
 #include "include/node.h"
 
+template class Node<int>;
+
 template<typename T>
 Node<T>::Node()
 {
@@ -42,8 +44,9 @@ void Node<T>::addDependant(Node<T> *dp)
     }
 }
 
-//std::vector<Node *> Node::getDependant()
-//{
+template<typename T>
+std::vector<Node<T> *> Node<T>::getDependant()
+{
 ////	std::vector<Node *> nodes = father->getNodes();
 ////	std::vector<Node *> dependant;
 ////	Node * me  = this;
@@ -55,9 +58,9 @@ void Node<T>::addDependant(Node<T> *dp)
 ////
 ////		});
 //
-//	return dependant;
-//
-//}
+	return dependant;
+
+}
 
 template<typename T> void Node<T>::addCompute(toComputeFun_T to_compute)
 {

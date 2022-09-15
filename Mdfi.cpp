@@ -1,4 +1,5 @@
 #include "include/Mdfi.h"
+template class Mdfi<int>;
 
 template<typename T>
 Mdfi<T>::Mdfi(Node<T> * node):dagNode(node),inputToken(node->input_size),\
