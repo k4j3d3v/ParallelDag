@@ -2,14 +2,15 @@
 #include <ostream>
 #include <algorithm> 
 #include "include/node.h"
-#include "include/graph.h"
 
-Node::Node()
+template<typename T>
+Node<T>::Node()
 {
-	Node(-1, 0, 0);
+	Node<T>(-1, 0, 0);
 
 }
-Node::Node(int id, int in_a, int out_a, int input)
+template<typename T>
+Node<T>::Node(int id, int in_a, int out_a, int input)
 {
 	Node::id = id;
 	input_arity = in_a;
@@ -18,18 +19,21 @@ Node::Node(int id, int in_a, int out_a, int input)
     dependence_added = 0;
 	//father = dagRef;
 	std::cout<<"Node created, id: "<<Node::id<<std::endl;
-
 }
-Node::Node(int id, int in_a, int out_a):Node(id, in_a,out_a, 0) {}
-int Node::addDependence(Node *dp)
-{
-	std::cout<<"addDep method"<<std::endl;
-	if(dependence.size() < input_arity)
-		Node::dependence.emplace_back(dp);
+template<typename T>
+Node<T>::Node(int id, int in_a, int out_a):Node(id, in_a,out_a, 0) {}
 
-	return 0;
-}
-void Node::addDependant(Node *dp)
+//int Node::addDependence(Node *dp)
+//{
+//	std::cout<<"addDep method"<<std::endl;
+//	if(dependence.size() < input_arity)
+//		Node::dependence.emplace_back(dp);
+//
+//	return 0;
+//}
+
+template<typename T>
+void Node<T>::addDependant(Node<T> *dp)
 {
     if(dependant.size() < out_arity) {
         Node::dependant.emplace_back(dp);
@@ -38,44 +42,44 @@ void Node::addDependant(Node *dp)
     }
 }
 
-std::vector<Node *> Node::getDependant()
-{
-//	std::vector<Node *> nodes = father->getNodes();
-//	std::vector<Node *> dependant;
-//	Node * me  = this;
-//	std::copy_if (nodes.begin(), nodes.end(), std::back_inserter(dependant),
-//		[this](Node* i)
-//		{
-//			std::vector<Node*> v = i->dependence;
-//			return std::find(v.begin(), v.end(),this)!=v.end();
+//std::vector<Node *> Node::getDependant()
+//{
+////	std::vector<Node *> nodes = father->getNodes();
+////	std::vector<Node *> dependant;
+////	Node * me  = this;
+////	std::copy_if (nodes.begin(), nodes.end(), std::back_inserter(dependant),
+////		[this](Node* i)
+////		{
+////			std::vector<Node*> v = i->dependence;
+////			return std::find(v.begin(), v.end(),this)!=v.end();
+////
+////		});
 //
-//		});
+//	return dependant;
+//
+//}
 
-	return dependant;
-
-}
-
-void Node::addCompute(multiIntFun to_compute)
+template<typename T> void Node<T>::addCompute(toComputeFun_T to_compute)
 {
 	std::cout<<"addComputed invoked on "<<this->id<<std::endl;
 	task = to_compute;
 }
 
-std::function<std::vector<int>(std::vector<int>)> Node::getTask()
+template<typename T>  typename Node<T>::toComputeFun_T Node<T>::getTask()
 {
 	return task;
 } 
-bool operator==(const Node& lhs, const Node& rhs)
-{ 
-	return lhs.id==rhs.id;
-}
+//bool operator==(const Node& lhs, const Node& rhs)
+//{
+//	return lhs.id==rhs.id;
+//}
 
-std::ostream& operator<< (std::ostream& out, const Node& node)
+/*std::ostream& operator<< (std::ostream& out, const Node& node)
 {
     // Since operator<< is a friend of the Point class, we can access Point's members directly.
     out << "Node(id=" << node.id<< ", in_a" << node.input_arity  << ", out_a" << node.out_arity << ')';
 
     return out;
-}
+}*/
 
 

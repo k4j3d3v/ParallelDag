@@ -13,12 +13,14 @@
 #include <mutex>
 #include <condition_variable>
 #include <unordered_map>
+template<typename T>
 class Graph;
 
-class Mdfg {
+template<typename T>
+class Mdfg{
     private:
 
-        std::unordered_map<Node *, Mdfi *> mapNodeMdfi;
+        std::unordered_map<Node<T> *, Mdfi<T> *> mapNodeMdfi;
 #ifndef SEQ
         std::mutex m_firable, repository_m;
         std::condition_variable cv;
@@ -27,16 +29,16 @@ class Mdfg {
 
 
     public:
-    std::vector<Mdfi *> repository;
-    std::queue<Mdfi *> firable;
-        Mdfg(Graph *dag);
+    std::vector<Mdfi<T>*> repository;
+    std::queue<Mdfi<T> *> firable;
+        Mdfg(Graph<T> *dag);
 
-        void sendToken(Mdfi *executeInstr, std::vector<int> inputs);
+        void sendToken(Mdfi<T> *executeInstr, std::vector<T> inputs);
 
         unsigned countMissingInstructions();
-        std::vector<Mdfi *> getSources();
+        std::vector<Mdfi<T> *> getSources();
 
-        Mdfi *getFirable();
+        Mdfi<T> *getFirable();
 };
 
 #endif //PARALLELDAG_MDFG_H

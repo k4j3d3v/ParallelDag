@@ -1,6 +1,7 @@
 #include "include/Mdfi.h"
 
-Mdfi::Mdfi(Node * node):dagNode(node),inputToken(node->input_size),\
+template<typename T>
+Mdfi<T>::Mdfi(Node<T> * node):dagNode(node),inputToken(node->input_size),\
         outputToken(node->out_arity),missingToken(node->input_arity)
 {
     //outputDestination = node->getDependant();
@@ -11,7 +12,8 @@ Mdfi::Mdfi(Node * node):dagNode(node),inputToken(node->input_size),\
         inputs.resize(inputToken);
 
 }
-bool Mdfi::addOuputDest(Mdfi * dest)
+template<typename T>
+bool Mdfi<T>::addOuputDest(Mdfi<T> * dest)
 {
     if (outputDestination.size() < outputToken) {
         outputDestination.emplace_back(dest);
@@ -19,15 +21,18 @@ bool Mdfi::addOuputDest(Mdfi * dest)
     }
     return false;
 }
-void Mdfi::setFirable()
+template<typename T>
+void Mdfi<T>::setFirable()
 {
     firable=true;
 }
-bool Mdfi::checkFirable()
+template<typename T>
+bool Mdfi<T>::checkFirable()
 {
     return missingToken == 0;
 }
-std::vector<int> Mdfi::run(vector<int> flattenedInputs)
+template<typename T>
+std::vector<T> Mdfi<T>::run(vector<T> flattenedInputs)
 {
     return this->dagNode->getTask()(flattenedInputs);
 }

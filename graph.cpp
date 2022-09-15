@@ -6,10 +6,12 @@
 #include <vector>
 
 #include <thread>
-Graph::Graph() {
+template<typename T>
+Graph<T>::Graph() {
 
 }
-int Graph::addNode(Node *node)
+template<typename T>
+int Graph<T>::addNode(Node<T> *node)
 {
 	nodes.emplace_back(node);
 	std::cout<<"Node added, id: "<<node->id<<std::endl;
@@ -17,17 +19,19 @@ int Graph::addNode(Node *node)
 	return 0;
 }
 
-std::vector<Node*> Graph::getNodes()
+template<typename T>
+std::vector<Node<T> *> Graph<T>::getNodes()
 {
 	return nodes;
 }
 
-void Graph::setUpParallelComp(int nw)
+template<typename T>
+void Graph<T>::setUpParallelComp(int nw)
 {
     #ifdef SEQ
         std::cout<<"Seq mode \n";
     #endif
-    g_mdf = new Mdfg(this);
+    g_mdf = new Mdfg<T>(this);
 #ifndef SEQ
     if(nw > 0)
         thread_count = nw;
@@ -35,10 +39,11 @@ void Graph::setUpParallelComp(int nw)
         thread_count = std::thread::hardware_concurrency();
 #endif
 }
-void Graph::perThreadWork() {
+template<typename T>
+void Graph<T>::perThreadWork() {
     while (true) {
 
-        Mdfi *f = g_mdf->getFirable();
+        Mdfi<T> *f = g_mdf->getFirable();
         if(f != nullptr) {
 
             std::cout << "[ "<<std::this_thread::get_id()<<" ] Executing instruction dag n. " << f->dagNode->id << std::endl;
@@ -60,7 +65,8 @@ void Graph::perThreadWork() {
         }
     }
 }
-Node* Graph::getIndependentNode()
+template<typename T>
+Node<T>* Graph<T>::getIndependentNode()
 {
     for (auto &n : nodes) {
         if(n->dependence.empty())
@@ -69,20 +75,21 @@ Node* Graph::getIndependentNode()
     }
     return nullptr;
 }
-
-void Graph::initializeSources(vector<int> const &sourceInput)
+template<typename T>
+void Graph<T>::initializeSources(vector<T> const &sourceInput)
 {
     auto sourceInstr = g_mdf->getSources();
     int i = 0;
     for(auto instr : sourceInstr) {
-        std::vector<int> forInstrIn;
+        std::vector<T> forInstrIn;
         for (; i < instr->inputToken; i++) {
             forInstrIn.push_back(sourceInput[i]);
         }
         instr->inputs[0]=forInstrIn;
     }
 }
-void Graph::compute(std::vector<int> sourceInput) {
+template<typename T>
+void Graph<T>::compute(std::vector<T> sourceInput) {
     std::cout<<"Starting computations \n";
     initializeSources(sourceInput);
     std::vector<std::thread> threads;
@@ -102,15 +109,15 @@ void Graph::compute(std::vector<int> sourceInput) {
     }
 
 }
-
-void Graph::compute_seq(std::vector<int> sourceInput) {
+template<typename T>
+void Graph<T>::compute_seq(std::vector<T> sourceInput) {
     initializeSources(sourceInput);
-    Mdfi *f = g_mdf->getFirable();
+    Mdfi<T> *f = g_mdf->getFirable();
     while (f!=nullptr) {
 
             std::cout << "[ "<<std::this_thread::get_id()<<" ] Executing instruction dag n. " << f->dagNode->id << std::endl;
 
-            std::vector<int> flattenedInput;
+            std::vector<T> flattenedInput;
             std::cout << "[ "<<std::this_thread::get_id()<<" ]  BEFORE Flattened" << std::endl;
             for(auto && v : f->inputs){
                 flattenedInput.insert(flattenedInput.end(), v.begin(), v.end());
@@ -124,7 +131,8 @@ void Graph::compute_seq(std::vector<int> sourceInput) {
     }
 
 }
-void Graph::printNodes()
+template<typename T>
+void Graph<T>::printNodes()
 {
 	for (auto i: nodes)
 		std::cout << (*i) << ' ';

@@ -23,19 +23,19 @@ int main(int argc, char *argv[]) {
         nw = atoi(argv[1]);
     std::cout << "Specified num of worker: " << nw << std::endl;
 
-    Graph g;
+    Graph<int> g;
 //    //            id, in, out
-    Node *A = new Node(1, 0, 40, 1);
-    Node *B = new Node(2, 1, 0);
-    Node *C = new Node(3, 1, 0);
-    Node *D = new Node(4, 1, 0);
-    Node *E = new Node(5, 1, 0);
-    Node *F = new Node(6, 1, 0);
-    Node *G = new Node(7, 1, 0);
-    Node *H = new Node(8, 1, 0);
-    Node *I = new Node(9, 1, 0);
-    Node *J = new Node(10, 1, 0);
-    Node *K = new Node(11, 1, 0);
+    Node<int> *A = new Node<int>(1, 0, 40, 1);
+    Node<int> *B = new Node<int>(2, 1, 0);
+    Node<int> *C = new Node<int>(3, 1, 0);
+    Node<int> *D = new Node<int>(4, 1, 0);
+    Node<int> *E = new Node<int>(5, 1, 0);
+    Node<int> *F = new Node<int>(6, 1, 0);
+    Node<int> *G = new Node<int>(7, 1, 0);
+    Node<int> *H = new Node<int>(8, 1, 0);
+    Node<int> *I = new Node<int>(9, 1, 0);
+    Node<int> *J = new Node<int>(10, 1, 0);
+    Node<int> *K = new Node<int>(11, 1, 0);
 
     A->addDependant(B);
     A->addDependant(C);
@@ -180,10 +180,10 @@ int main(int argc, char *argv[]) {
     });
 
 
-    Node *n;
+    Node<int> *n;
     for(int k = 0, s_id = 12; k< 30; k++)
     {
-        n = new Node(s_id+k, 1, 0);
+        n = new Node<int>(s_id+k, 1, 0);
         n->addCompute([&](vector in) {
             float ck = in[0];
             float ac = ck*3,res;

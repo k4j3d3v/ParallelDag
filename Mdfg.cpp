@@ -2,9 +2,11 @@
 #include "include/graph.h"
 #include "utimer.cpp"
 #include <iostream>
-Mdfg::Mdfg(Graph * dag){
+
+template<typename T>
+Mdfg<T>::Mdfg(Graph<T> * dag){
             for (auto node : dag->getNodes()) {
-                Mdfi * instr = new Mdfi(node);
+                Mdfi<T> * instr = new Mdfi(node);
                 mapNodeMdfi[node]=instr;
                 if(instr->checkFirable())
                     firable.push(instr);
@@ -14,10 +16,10 @@ Mdfg::Mdfg(Graph * dag){
             std::cout<<"Firable initial elements: \n";
             for(int i = 0; i < firable.size(); i++)
             {
-               Mdfi * instr = firable.front();
+               Mdfi<T> * instr = firable.front();
                 std::cout<<"Instruction dag n. "<<instr->dagNode->id<<std::endl;
 
-                std::vector<Node *> depNodes = instr->dagNode->getDependant();
+                std::vector<Node<T> *> depNodes = instr->dagNode->getDependant();
                for(auto &node : depNodes)
                    instr->addOuputDest(mapNodeMdfi[node]);
             }
@@ -32,7 +34,8 @@ Mdfg::Mdfg(Graph * dag){
             }
 
         }
- void Mdfg::sendToken(Mdfi * executeInstr, std::vector<int> inputs){
+template<typename T>
+void Mdfg<T>::sendToken(Mdfi<T> * executeInstr, std::vector<T> inputs){
     auto dst =  executeInstr->outputDestination;
     if(dst.empty())
     {
@@ -43,7 +46,7 @@ Mdfg::Mdfg(Graph * dag){
     }
     else
 
-        for(Mdfi * outDest : dst)
+        for(Mdfi<T> * outDest : dst)
         {
 
                 outDest->missingToken--;
@@ -74,22 +77,24 @@ Mdfg::Mdfg(Graph * dag){
                 instr.compile();
         }*/
 
-unsigned Mdfg::countMissingInstructions()
+template<typename T>
+unsigned Mdfg<T>::countMissingInstructions()
 {
     return repository.size();
 }
 
-std::vector<Mdfi *> Mdfg::getSources()
+template<typename T>
+std::vector<Mdfi<T> *> Mdfg<T>::getSources()
 {
-    std::vector<Mdfi *> sourceInstr;
+    std::vector<Mdfi<T> *> sourceInstr;
     for(int i = 0; i < firable.size(); i++)
     {
         sourceInstr.emplace_back(firable.front());
     }
     return  sourceInstr;
 }
-
-Mdfi * Mdfg::getFirable()
+template<typename T>
+Mdfi<T> * Mdfg<T>::getFirable()
 {
     //repository_m.lock();
     // m_firable.lock();
@@ -104,7 +109,7 @@ Mdfi * Mdfg::getFirable()
 #endif
         return nullptr;
     }
-    Mdfi *instr = nullptr;
+    Mdfi<T> *instr = nullptr;
     {
 #ifndef SEQ
         std::unique_lock lc(m_firable);

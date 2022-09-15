@@ -9,13 +9,14 @@
 
 template<typename T>
 using vector = std::vector<T>;
+template<typename T>
 class Mdfi {
     private:
          // TO BE USED ONLY FOR SOURCE INSTR
         int outputToken;
     public:
 
-        Node * dagNode;
+        Node<T> * dagNode;
         bool firable;
         int missingToken;
         int inputToken;
@@ -23,11 +24,11 @@ class Mdfi {
         vector<Mdfi *> outputDestination;
         vector<vector<int>> inputs;
 
-        Mdfi(Node * node);
+        Mdfi(Node<T> * node);
         bool addOuputDest(Mdfi * dest);
         void setFirable();
         bool checkFirable();
-        vector<int> run(vector<int>);
+        vector<T> run(vector<T>);
 
 
 
