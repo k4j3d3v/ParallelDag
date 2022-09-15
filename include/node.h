@@ -10,34 +10,56 @@ template<typename T>
 class Node{
 
     using toComputeFun_T = std::function<std::vector<T>(std::vector<T>)>;
+    private:
+        int id;
 
-    toComputeFun_T task;
-	public:
-		int id; 
-
-		int input_arity, out_arity;
-        // should be > 0, only for source/root nodes
+        int input_arity, out_arity;
         int input_size;
         int dependence_added;
+        toComputeFun_T task;
 
         std::unordered_map<Node<T> *, int> offset_input;
-//        std::vector<Node *> dependence;
         std::vector<Node<T> *> dependant;
 
-        Node();
-        Node(int,int,int);
-        Node(int,int,int,int);
+	public:
+        Node(int id, int in_a, int out_a, int input)
+        {
+            this->id = id;
+            input_arity = in_a;
+            out_arity = out_a;
+            input_size = input;
+            dependence_added = 0;
+//            std::cout<<"Node created, id: "<<Node::id<<std::endl;
+        }
+
+        Node(int id, int in_a, int out_a):Node(id, in_a,out_a, 0) {}
+
+        Node():Node(-1, 0, 0){}
 
     //copy constructor
-	///	Node(const Node& ){ std::cout<<"Copy constructor invoked!"<<std::endl;};
-		//int addDependant(Node);
-    //    int addDependence(Node*);
-        void addDependant(Node<T>*);
-		void addCompute(toComputeFun_T);
+	//	Node(const Node& ){ std::cout<<"Copy constructor invoked!"<<std::endl;};
 
-		std::vector<Node<T> *> getDependant();
-        toComputeFun_T getTask();
-		//friend std::ostream& operator<< (std::ostream& out, const Node& node);
+        void addDependant(Node<T> *dp)
+        {
+            if(dependant.size() < out_arity) {
+                Node::dependant.emplace_back(dp);
+                offset_input[dp] = dp->dependence_added++;
+                //std::cout<<"Offset: "<<offset_input[dp]<<std::endl;
+            }
+        }
+        std::vector<Node<T> *> getDependant() {
+            return dependant;
+        }
+    void addCompute(toComputeFun_T to_compute)
+        {
+            //std::cout<<"addComputed invoked on "<<this->id<<std::endl;
+            task = to_compute;
+        }
+        toComputeFun_T getTask()
+        {
+            return task;
+        }
+    //friend std::ostream& operator<< (std::ostream& out, const Node& node);
 		//friend bool operator==(const Node& lhs, const Node& rhs);
 
 
