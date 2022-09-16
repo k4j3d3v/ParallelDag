@@ -97,12 +97,9 @@ std::vector<Mdfi<T> *> Mdfg<T>::getSources()
 template<typename T>
 Mdfi<T> * Mdfg<T>::getFirable()
 {
-    //repository_m.lock();
-    // m_firable.lock();
+
     bool empty_r = repository.empty();
-    //repository_m.unlock();
     bool empty_f = firable.empty();
-   // m_firable.unlock();
     if(empty_r && empty_f) {
         computation_done = true;
 #ifndef SEQ
