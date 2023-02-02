@@ -1,0 +1,247 @@
+\documentclass[a4paper,11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[english]{babel}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{subcaption}
+
+\graphicspath{ {./figures/} }
+%\usepackage[export]{adjustbox}
+\usepackage[]{algorithm}
+\usepackage{algpseudocode}
+\usepackage{dirtree}
+
+\title{DAG Interpreter: a parallel implementation}
+\author{Luigi di Micco}
+
+
+\begin{document}
+
+\maketitle
+%\tableofcontents
+
+\begin{abstract}
+In this report we analyze the implementation of a library supporting the parallel execution of interdependent tasks set, modeled as a Directed Acyclic Graph.
+We start discussing a simple solution and then we present a more performing solution, analyzing the C++ implementation and the perfomances achieved on different structured DAGs.   
+\end{abstract}
+
+\section{Introduction}
+A DAG(Directed Acyclic Graph) is a directed graph without cycles, it is really suitable to represent activities and relations between them.
+Here we can contextualize a DAG as structure such that each node is a task and the edges are the dependences between the tasks.
+This is a reasonable view, there exist a lot of scenarios where this can be applied. A near context are Machine Learning pipelines computations, 
+where any kind of speedup would be appreciated.
+Here we want to analyze how to parallelize the execution of this tasks, respecting the dependences, but achieving performances such that justify (the development) the usage of this library for future users.
+
+\section{Problem analysis}
+As already introduced, DAGs can represent tasks with dependence relations, so that we can argue that in general the dependence comes from data.
+Then, our aim is to realize data parallel computation, but there exists crucial factors to take into account, coming from DAG's structure:
+	\begin{itemize}
+		\item \textbf{dependences} must be respected: they have an impact on the overall computation results;
+		\item \textbf{maximum parallelism} achievable: this is influenced by the task interconnections i.e. graph edges (and system limitations, but we cannot play with).
+	\end{itemize}
+Let us use an example to better explain the issues.
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.7\textwidth]{dag_01}
+	\caption{A simple DAG of tasks.}
+	\label{fig:dag_0}
+\end{figure}
+Assuming the very simple DAG in figure \ref{fig:dag_0} represents a fully meaningful computation, where there are overall 5 tasks to be executed:
+\begin{itemize}
+	\item $T_1$ starts the computation;
+	\item $T_2,T_3,T_4$ depend from $T_1$ and will start the computations as soon as $T_1$ ends;
+	\item $T_5$ will end the entire computation as soon as its dependences are satisfied.
+\end{itemize}
+In this graph, the achievable parallelism degree is 3, that is the number of indipendent tasks, after the common dependence $T_1$ is satisfied.
+
+Thus, the achievable performances strictly depend on:
+\begin{enumerate}
+	\item how fast the dependencies are solved;
+	\item the number of indipendent tasks per level. 
+\end{enumerate}
+Let us better formalize the scenario, starting with the execution times, both sequential and ideal parallel, on the example graph:
+\begin{equation}
+	T_{seq} = \sum_{i=1}^{5} T_i
+\end{equation}
+where we are assuming $T_i$ be the execution time of the single task $T_i$.
+Now, the ideal parallel execution time:
+\begin{equation}
+	T_{par} = T_1+ \frac{T_2+T_3+T_4}{3} + T_5,
+\end{equation}
+assuming the system makes available at least 3 workers.
+We observe that we are reducing the time of a factor 3 only with respect to the execution times of three tasks: the ones that can execute in parallel at a certain point.
+This shows that in general we cannot expect to decrease the execution time strictly proportionally to the number of worker assigned.
+%The DAG structure directly impacts on parallel execution time, and then on the achievable speedup.
+An example of DAG on which we will never able to improve the execution time exploiting parallel execution is the one shown in figure \ref{fig:dag_list}.
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.7\textwidth]{dag_list}
+	\caption{A DAG with all interpendant tasks.}
+	\label{fig:dag_list}
+\end{figure}
+All the tasks have a dependence, thus it is not possible to have multiple workers running two or more tasks at the same time: each task is dependant from the previous one.
+Assuming to have $n$ tasks, we get:
+\begin{equation}
+	T_{seq} = \sum_{i=1}^{n} T_i
+\end{equation}
+and 
+\begin{equation}
+	T_{par}(nw) = \sum_{i=1}^{n} T_i + \delta(nw) = T_{seq} + \delta(nw). 
+\end{equation}
+Thus, the execution such kind of DAG in parallel does not make any sense: we will spend a bit more than computing in a sequential way.
+This \textit{"a bit more"} is quantified using a function $\delta$ growing with the number of worker $nw$, and indicates the overheads due to creation and destruction of the workers.
+\subsection{A straightforward (inefficient) solution}
+A first really basic solution consists to topologically sort the DAG and then execute it.
+We can logically think to "split" the sorted DAG in levels, where with "level" we are referring to the graph terminology sense: the partition of nodes with a certain distance from the root node.
+So, we supply the allocated number of workers with the tasks of each level, until we reach the sink(s).
+We manage the dependences exploiting such level concept: we synchronize the data states, putting a synchronization point at the end of each level.
+A visual look of the explained idea applied on the graph in picture \ref{fig:dag_0} is shown in picture \ref{fig:dag_level}: there are three levels and two synchronization point, that we can imagine as barriers. 
+
+ \begin{figure}[h]
+	\centering
+	\includegraphics[width=0.7\textwidth]{dag_intolevel}
+	\caption{Previous tasks DAG split in levels.}
+	\label{fig:dag_level}
+\end{figure}
+\subsection{Inefficiencies}
+Despite the solution's simplicity, it introduces clear inefficiencies.
+First of all, we notice that the barriers at the end of each level carry a pretty evident overhead,  that becomes consistent with an high number of workers.
+Moreover, using this approach we constrain the advance on level on the biggest execution time for a level: in other words if all the workers finished computing their tasks but a single one not,
+and the dependences for some tasks in a successive level are satisfied, the computation on these cannot start until this long last task concludes, or more general all the tasks of the level are completed.
+This can be seen in picture \ref{fig:dag_ineff}, assuming $T_2 << T_3, T_4$ and $T_5 >> T_6$ we are slowing down a lot the overall computation and cutting away the potential application of the parallel approach on this case study.
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.7\textwidth]{dag_ineff}
+	\caption{A case study DAG showing a limitation of the approach.}
+	\label{fig:dag_ineff}
+\end{figure}
+\subsection{A straightforward effective solution}
+A really effective approach to this kind of problem follows these ideas:
+\begin{itemize}
+   \item run a task as soon as possible;
+   \item exploiting the available workers as much as possible.
+ \end{itemize}
+And this in a more detailed way can be expressed in a very high level pseudocode as below.\\
+
+\begin{algorithm}
+%\caption{rank(x)}\label{alg:rnk}
+\begin{algorithmic}
+\State start source nodes execution
+\ForAll{node $ n $ whose dependences are satisfied} 
+\State start $ n $ execution
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+Here we are hiding the workers management and the tasks assignment, but we give a rough idea of the solution that is enough for seeing the advantages and the effectiveness.
+And what we expect is a real speedup pretty near to the number of instantiated worker because our aim is to exploit the workers as much as possible, thus reduce them idle time during execution.
+A rough formula describing the ideal parallel execution time with this approach can be:
+\begin{equation}
+	T_{par}(nw) \approx \sum_{i=1}^{l} \frac{\sum_{j=1}^{\#nodes(l)} T_j}{\min\{\#nodes(l), nw\}} \text{ where } l = \#\text{DAG's levels},
+\end{equation}
+and with $\#nodes(l)$ is intended the number of nodes at level $l$. 
+As already stated it is a very rough estimation because we are assuming to make parallel execution per level and that for each level we will have at least $ \min\{\#nodes(l), nw\} $ number of worker available.
+\section{Implementation details}
+The implementation is surely based on the previous exposed pillars but more in practice exploits the Macro Data Flow framework implementation concepts.
+Let us start from top, looking at files tree:
+\\
+\vbox{
+
+  \dirtree{%
+  .1 ParallelDag.
+  .2 utimer.cpp.
+  .2 src.
+  .3 main.cpp.
+  .2 include.
+  .3 graph.h.
+  .3 node.h.
+  .3 Mdfg.h.
+  .3 Mdfi.h.
+  }
+\hbox{}
+}
+\\
+the library core is located in \texttt{include} directory.\\
+All the classes in this library are templatized just using the C++ template support, for supporting computations on different types in a safer way.
+Each one of these files contain a class declaration:
+\begin{itemize}
+   \item \texttt{graph.h}: declares the Graph class. This is the core class for a library user: he creates a graph object using this class. After he adds the nodes to the graph, through the graph object sets up the computation type and starts it, supplying the input data.
+   This is the class  in charge to create the MDF Graph upon our graph (the one created by a user) and the threads orcherstrator: here we define the thread's work, start the multi-thread execution on the MDFG and we collect the threads.
+  \item \texttt{node.h}: declares the Node class. Here we have the basic graph units, all the graph logic is embedded here: input/output arity, nodes' relation that are dependence ones. Let us remark that a node represents a task, indeed we store it as a function taking a vector as parameter and returning a vector. This design choice is for managing the possibility to get data from multiple incoming nodes and for supplying the dependant nodes with the produced data.
+  \item \texttt{Mdfg.h}: declares the Mdfg class. Here we find the ad hoc implementation of the MDFG for our graphs problem.
+  All DAG nodes are compiled into a MDF Instruction: we transform the tasks in a suitable form for our interpreter. We put all the instructions in the MDFG repository, except the ones already runnable (the sources of the DAG) that will go in the firable instructions queue. This queue will be used during the entire execution: as the instructions dependences are satisfied, they become firable and then are pushed in the queue. All the threads will pop the instructions from the firable queue and keep the graph execution going on until the MDFI are finished.
+  Notice multiple threads can access the firable queue, thus here are also encoded synchronization mechanisms in a way that all the threads have a coherent view.
+  We will focus later on this kind of problems.  
+  Even though the threads' work is defined inside the Graph class, what it is needed to let the MDFG flow going on is declared here:
+  \begin{itemize}
+    \item \texttt{getSources}: provides us the entry point for the MDFG interpretation;
+    \item \texttt{getFirable}: this methods returns a firable instruction but it checks if the MDFG computation is completed too;
+    \item \texttt{sendToken}: this is a really crucial method. It propagates the results of ran instructions to the dependants, or in other words it sends the tokens.
+    The instructions that no more miss other tokens are promoted to firable and thus pushed in the respective queue.
+  \end{itemize}
+ \item \texttt{Mdfi.h}: declares the Mdfi class. This is the class used to represent the Macro Data Flow instruction, as previosly revealed. Here are defined the names useful to transform a simple
+ DAG task into an instruction runnable in a MDFG environment. For example: we store the references to the dependant instructions, as previously stated, will be used for sending tokens; the number of missing tokens, it is useful for arguing when an instruction is going to become firable and so on.
+ \end{itemize} 
+\subsection{Synchronization mechanisms}
+In this section we are going to analyze the adopted solution to the contentions in this project.
+The program logic vulnerable to multi-thread enviroment problem is located in the MDFG class, in particular touches the firable queue.
+The queue is subject to concurrent write and read, let us summarize the possible situations in two macro scenarios:
+\begin{itemize}
+  \item Unpredictable: a thread can pop while another is pushing, a thread can pop while antoher is just reading the size and so on;
+  \item Empty queue: some threads are working maybe on long instructions, other would like to get a task but the queue is empty.  
+\end{itemize}
+
+
+% The \texttt{graph.h} and \texttt{node.h} files define the graph and node classes, here we didn't spend much effort: they contain the least definitions for making the library usable(without the checks needed for a library that will be really used).
+% The workers management logic is in the Mdfg class:
+% here we find the core of the MDF approach and then of the library.
+% Basically, the Mdfg class is defined on the base of the Mdfi class, the last one represents the MDF instructions.
+% In our scenario the instructions will be the DAG tasks, but the class defines the information for making them really instructions.
+% Let us point out that what we are going to describe is a MDF interpreter constructed on a DAG: we are constructing an abstract machine for the language underlined by a DAG. 
+\section{Performance analysis}
+As largely previous analyzed, the performances achieved with the developed library are subject to the graph structure. For this reason we are going to analyze the behaviour on different structure DAGs, in this way we will verify in an experimental way what was previously stated.
+For the sake of shortness, three different structured DAGs will be analyzed:
+\begin{enumerate}
+   \item the most simple and most parallelizable: one root, plenty of multiple dependant. Once the root is been executed, all the other tasks are free to be run.
+   \item one with a various relations, not the naive scenario as the previous
+   \item list \ldots 
+ \end{enumerate} 
+
+ \subsection{The most parallelizable dag}
+ In the figure \ref{fig:best_dag} is introduced a graph having a shape and a set of tasks such that can be worth to parallelize the execution.
+ It consists of a root having ten outgoing edges which arrive in other nodes. In each one of the latters start a chain of nodes, having length ten.
+ We notice that once we execute the root A, it is possible to execute in a parallel way the ten chains. 
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.7\textwidth]{bestdag}
+	\caption{The analyzed DAG having a parallelizable shape.}
+	\label{fig:best_dag}
+\end{figure}
+
+  \begin{figure}
+   %\centering
+  \begin{subfigure}{0.6\textwidth}
+      \includegraphics[width=\textwidth]{speedup_best}
+      \caption{Speedup measurements varying number of workers (for the previous dag).}
+      \label{fig:speedup_best}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}{0.6\textwidth}
+      \includegraphics[width=\textwidth]{efficiency_best}
+      \caption{Efficiency measurements varying number of workers (for the previous dag).}
+      \label{fig:third}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}{0.6\textwidth}
+      \includegraphics[width=\textwidth]{scalability_best}
+      \caption{Scalability measurements varying number of workers (for the previous dag).}
+      \label{fig:third}
+  \end{subfigure}          
+  \caption{Most promising structured DAG measurements.}
+  \label{fig:figures}
+  \end{figure}
+
+
+\end{document}
