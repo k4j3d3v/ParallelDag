@@ -11,18 +11,19 @@ class Node{
 
     using toComputeFun_T = std::function<std::vector<T>(std::vector<T>)>;
     private:
-        int id;
 
-        int input_arity, out_arity;
-        int input_size;
         int dependence_added;
         toComputeFun_T task;
 
-        std::unordered_map<Node<T> *, int> offset_input;
         std::vector<Node<T> *> dependant;
 
 	public:
-        Node(int id, int in_a, int out_a, int input)
+        int id, input_arity, out_arity;
+        int input_size;
+        std::unordered_map<Node<T> *, int> offset_input;
+
+
+    Node(int id, int in_a, int out_a, int input)
         {
             this->id = id;
             input_arity = in_a;

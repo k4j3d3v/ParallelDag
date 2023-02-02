@@ -23,6 +23,7 @@ class Mdfg{
         std::unordered_map<Node<T> *, Mdfi<T> *> mapNodeMdfi;
 #ifndef SEQ
         std::mutex m_firable;
+//        std::mutex repository_m;
         std::condition_variable cv;
 #endif
         bool computation_done = false;
@@ -46,23 +47,24 @@ class Mdfg{
 
                 std::vector<Node<T> *> depNodes = instr->dagNode->getDependant();
                 for(auto &node : depNodes)
-                    instr->addOuputDest(mapNodeMdfi[node]);
+                    instr->addOutputDest(mapNodeMdfi[node]);
             }
             for(auto & instr : repository)
             {
                 auto depNodes = instr->dagNode->getDependant();
                 for(auto &node : depNodes)
-                    instr->addOuputDest(mapNodeMdfi[node]);
+                    instr->addOutputDest(mapNodeMdfi[node]);
             }
 
         }
         void sendToken(Mdfi<T> *executeInstr, std::vector<T> inputs){
             auto dst =  executeInstr->outputDestination;
+
             if(dst.empty())
             {
 
-//        for(auto i : inputs)
-//            std::cout<<(i)<<std::endl;
+                for(auto i : inputs)
+                    std::cout<<(i)<<std::endl;
 
             }
             else
@@ -75,10 +77,10 @@ class Mdfg{
                     //here?
                     outDest->inputs[pos]=inputs;
                     if (outDest->missingToken == 0) {
-                        //   repository_m.lock();
+//                        repository_m.lock();
                         std::erase(repository, outDest);
-                        //  repository_m.unlock();
-                        outDest->setFirable();
+//                        repository_m.unlock();
+                       // outDest->setFirable();
 #ifndef SEQ
                         m_firable.lock();
 #endif

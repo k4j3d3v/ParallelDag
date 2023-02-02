@@ -15,16 +15,17 @@ class Mdfi {
          // TO BE USED ONLY FOR SOURCE INSTR
         int outputToken;
 
-        Node<T> * dagNode;
-        int missingToken;
-        int inputToken;
 
-        vector<Mdfi *> outputDestination;
-        vector<vector<int>> inputs;
 
 public:
+    int inputToken;
+    Node<T> * dagNode;
+    vector<vector<T>> inputs;
+    vector<Mdfi *> outputDestination;
+    int missingToken;
 
-        Mdfi(Node<T> * node):dagNode(node),inputToken(node->input_size),\
+
+    Mdfi(Node<T> * node):dagNode(node),inputToken(node->input_size),\
         outputToken(node->out_arity),missingToken(node->input_arity)
         {
             if(inputToken==0)

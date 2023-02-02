@@ -1,13 +1,41 @@
 #include <iostream>
 #include <cmath>
-#include "include/graph.h"
+#include "graph.h"
 //#include "graph.cpp"
-#include "utimer.cpp"
-
+#include "../utimer.cpp"
+//#define SEQ
 
 #define CYCLE 100000
 
+auto fun = [](std::vector<float> in) {
 
+    float bd = in[0], be = in[1], bf = in[2], bg = in[3];
+
+    for (int i = 0; i < CYCLE; i++) {
+        bg = sin(sin(sin(bg)));
+        be = sin(pow(be, i) + sqrt(i * bg));
+
+        bf = sin(pow(be, i) + pow(i * bg, i));
+        bd = cos(1 + bf) + sqrt(i + pow(bd, bf));
+    }
+    return std::vector<float> {bd,be,bf, bg};
+
+};
+void appendNodesChain(int &startingId, Node<float> * startingNode, int chainLen, Graph<float> &g)
+{
+    std::vector<Node<float> * > dependence= {startingNode};
+    for (int i=0, out_a=1; i< chainLen; i++)
+    {
+        if(i == chainLen - 1)
+            out_a =0;
+        auto dep = new Node<float>(startingId, 1, out_a);
+        dependence.push_back(dep);
+        dep->addCompute(fun);
+        dependence[i]->addDependant(dep);
+        g.addNode(dep);
+        startingId++;
+    }
+}
 int main(int argc, char *argv[]) {
 
     /*
@@ -24,19 +52,19 @@ int main(int argc, char *argv[]) {
         nw = atoi(argv[1]);
     std::cout << "Specified num of worker: " << nw << std::endl;
 
-    Graph<int> g;
-//    //            id, in, out
-    Node<int> *A = new Node<int>(1, 0, 40, 1);
-    Node<int> *B = new Node<int>(2, 1, 0);
-    Node<int> *C = new Node<int>(3, 1, 0);
-    Node<int> *D = new Node<int>(4, 1, 0);
-    Node<int> *E = new Node<int>(5, 1, 0);
-    Node<int> *F = new Node<int>(6, 1, 0);
-    Node<int> *G = new Node<int>(7, 1, 0);
-    Node<int> *H = new Node<int>(8, 1, 0);
-    Node<int> *I = new Node<int>(9, 1, 0);
-    Node<int> *J = new Node<int>(10, 1, 0);
-    Node<int> *K = new Node<int>(11, 1, 0);
+    Graph<float> g;
+    //    //            id, in, out
+	auto *A = new Node<float>(1, 0, 40, 1);
+	auto *B = new Node<float>(2, 1, 1);
+	auto *C = new Node<float>(3, 1, 1);
+	auto *D = new Node<float>(4, 1, 1);
+	auto *E = new Node<float>(5, 1, 1);
+	auto *F = new Node<float>(6, 1, 1);
+	auto *G = new Node<float>(7, 1, 1);
+	auto *H = new Node<float>(8, 1, 1);
+	auto *I = new Node<float>(9, 1, 1);
+	auto *J = new Node<float>(10, 1, 1);
+	auto *K = new Node<float>(11, 1, 1);
 
     A->addDependant(B);
     A->addDependant(C);
@@ -49,7 +77,7 @@ int main(int argc, char *argv[]) {
     A->addDependant(J);
     A->addDependant(K);
 
-    using vector = std::vector<int>;
+    using vector = std::vector<float>;
 
     A->addCompute([](vector in) {
 
@@ -62,9 +90,10 @@ int main(int argc, char *argv[]) {
             ac = cos(cos(sin(ac))) + i;
 
         }
-        return vector {static_cast<int>(ab),static_cast<int>(ac)};
+        return vector {ab,ac};
 
     });
+
     B->addCompute([](vector in) {
 
         float bd, be, bf, bg, ab = in[0];
@@ -77,9 +106,14 @@ int main(int argc, char *argv[]) {
             bf = sin(pow(ab, i) + pow(i * ab, i));
             bd = cos(1 + ab) + sqrt(i + pow(ab, bf));
         }
-        return vector {static_cast<int>(bd),static_cast<int>(be),static_cast<int>(bf), static_cast<int>(bg)};
+        return vector {bd,be,bf, bg};
 
     });
+    const int chain_len =4;
+    std::vector<Node<float> * > dependence= {B};
+    int base_id = 12;
+    appendNodesChain(base_id, B, chain_len, g);
+
     C->addCompute([](vector in) {
         float ch, ci, cj, ck,ac=in[0], ab=0;
 
@@ -92,19 +126,27 @@ int main(int argc, char *argv[]) {
             ck = tan(scalbln(ab, i) + sqrt(i * ab));
 
         }
-        return vector {static_cast<int>(ch),static_cast<int>(ci),static_cast<int>(cj), static_cast<int>(ck)};
+        return vector {ch,ci,cj,ck};
     });
 
+
+
+    appendNodesChain(base_id, C, chain_len, g);
+
     D->addCompute([](vector in) {
-        int res = 1;
+        float res = 1;
         float bd = in[0];
         for (int i = 0; i < CYCLE; i++) {
             res *= pow(bd, i);
 
         }
-        return vector {static_cast<int>(res)};
+        return vector {res};
 
     });
+
+
+    appendNodesChain(base_id, D, chain_len, g);
+
 
     E->addCompute([](vector in) {
 
@@ -113,9 +155,14 @@ int main(int argc, char *argv[]) {
         for (int i = 0; i < CYCLE; i++) {
             res += cos(i + be) + be * i;
         }
-        return vector {static_cast<int>(res)};
+        return vector {res};
 
     });
+
+
+
+    appendNodesChain(base_id, E, chain_len, g);
+
     F->addCompute([](vector in) {
         float bf = in[0];
         bf += 1;
@@ -123,29 +170,41 @@ int main(int argc, char *argv[]) {
             bf *= sin(bf) + pow(bf, i) + i * bf;
 
         }
-        return vector {static_cast<int>(bf)};
+        return vector {bf};
 
     });
+
+
+    appendNodesChain(base_id, F, chain_len, g);
+
+
     G->addCompute([](vector in) {
         float bg = in[0];
-        int out=0;
+        float out=0;
         bg = bg + 1;
         double s = 0;
         for (int i = 0; i < CYCLE; i++) {
             s = sqrt(bg + i) + pow(bg, i + 1);
         }
         out += s;
-        return vector {static_cast<int>(out)};
+        return vector {out};
 
     });
+
+
+    appendNodesChain(base_id, G, chain_len, g);
+
     H->addCompute([](vector in) {
         float ch = in[0];
         for (int i = 0; i < CYCLE; i++) {
             ch = pow(ch, i) + sqrt(i * ch) + i;
         }
-        return vector {static_cast<int>(ch)};
+        return vector {ch};
 
     });
+
+    appendNodesChain(base_id, H, chain_len, g);
+
     float res;
     I->addCompute([](vector in) {
         float ci = in[0], res;
@@ -154,9 +213,13 @@ int main(int argc, char *argv[]) {
             res = cos(cos(cos(ci))) + pow(ci, i) + sqrt(ci * i) + sin(pow(i, ci));
         }
 
-        return vector {static_cast<int>(res)};
+        return vector {res};
 
     });
+
+
+    appendNodesChain(base_id, I, chain_len, g);
+
     J->addCompute([](vector in) {
 
         float cj = in[0], res;
@@ -165,10 +228,15 @@ int main(int argc, char *argv[]) {
             res = cos(cos(cos(cj))) + pow(cj, i) + sqrt(cj * i) + sin(pow(i, cj));
 
         }
-        return vector {static_cast<int>(res)};
+        return vector {res};
 
 
     });
+
+
+    appendNodesChain(base_id, J, chain_len, g);
+
+
     K->addCompute([](vector in) {
         float ck = in[0];
         float ac = ck*3,res;
@@ -176,32 +244,11 @@ int main(int argc, char *argv[]) {
             res = cos(cos(cos(ck))) + cos(cos(sin(ck))) + sqrt(ac * i) + sin(pow(i * ac, ck));
 
         }
-        return vector {static_cast<int>(res)};
+        return vector {res};
 
     });
 
-
-    Node<int> *n;
-    for(int k = 0, s_id = 12; k< 30; k++)
-    {
-        n = new Node<int>(s_id+k, 1, 0);
-        n->addCompute([&](vector in) {
-            float ck = in[0];
-            float ac = ck*3,res;
-
-            std::cout<<"Node n. "<<(s_id+k)<< std::endl;
-            for (int i = 0; i < CYCLE; i++) {
-                res = cos(cos(cos(ck))) + cos(cos(sin(ck))) +  sqrt(ac*i) + sin(pow(i*ac,ck));
-
-            }
-            return vector {static_cast<int>(res)};
-
-        });
-        A->addDependant(n);
-        g.addNode(n);
-
-    }
-
+    appendNodesChain(base_id, K, chain_len, g);
 
     g.addNode(A);
     g.addNode(B);
@@ -216,16 +263,22 @@ int main(int argc, char *argv[]) {
     g.addNode(K);
 
     std::cout << "Nodes before any operation: \n";
-//    g.printNodes();
+    //g.printNodes();
 
     {
-        utimer t("Par");
-        g.setUpParallelComp(nw);
-#ifdef SEQ
-        g.compute_seq(std::vector{9});
+#ifndef SEQ
+        utimer t("SEQ");
+        g.setUpComp(nw);
+        g.compute(std::vector<float>{9});
 #endif
-      g.compute(std::vector{9});
+#ifdef SEQ
+        utimer t("PAR");
+        g.setUpComp();
+        g.compute_seq(std::vector<float>{9});
+#endif
     }
+
+
 
 
     std::cout << "Finished!\n";

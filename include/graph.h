@@ -2,10 +2,14 @@
 #include <thread>
 #include "node.h"
 #include "Mdfi.h"
-template<typename T>
-class Mdfg;
-#ifndef seq
-#define NWORKER int nw
+#include "Mdfg.h"
+
+//template<typename T>
+//class Mdfg;
+#ifndef SEQ
+    #define NWORKER int nw
+#else
+    #define NWORKER
 #endif
 
 template<typename T>
@@ -25,7 +29,7 @@ class Graph{
 
                     std::cout << "[ "<<std::this_thread::get_id()<<" ] Executing instruction dag n. " << f->dagNode->id << std::endl;
 
-                    std::vector<int> flattenedInput;
+                    std::vector<float> flattenedInput;
                     std::cout << "[ "<<std::this_thread::get_id()<<" ]  BEFORE Flattened" << std::endl;
                     for(auto && v : f->inputs){
                         flattenedInput.insert(flattenedInput.end(), v.begin(), v.end());
@@ -96,6 +100,7 @@ public:
 
         }
         void compute_seq(std::vector<T> sourceInput) {
+            std::cout<<"DIO ESEGUE SEQ \n ";
             initializeSources(sourceInput);
             Mdfi<T> *f = g_mdf->getFirable();
             while (f!=nullptr) {
