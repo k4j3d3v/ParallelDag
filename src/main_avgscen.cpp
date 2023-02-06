@@ -1,9 +1,7 @@
 #include <iostream>
 #include <cmath>
 #include "graph.h"
-//#include "graph.cpp"
 #include "../utimer.cpp"
-//#define SEQ
 
 #define CYCLE 100000
 
@@ -26,8 +24,6 @@ Node<float>* appendNodesChain(int &startingId, Node<float> * startingNode, int c
     std::vector<Node<float> * > dependence= {startingNode};
     for (int i=0, out_a=1; i< chainLen; i++)
     {
-//        if(i == chainLen - 1)
-//            out_a =0;
         auto dep = new Node<float>(startingId, 1, out_a);
         dependence.push_back(dep);
         dep->addCompute(fun);
@@ -39,22 +35,12 @@ Node<float>* appendNodesChain(int &startingId, Node<float> * startingNode, int c
 }
 int main(int argc, char *argv[]) {
 
-    /*
-     *    /-> (B) \-v
-     * (A)            (D)
-     *  \ \-> (C) /-^  ^
-     *   \             |
-     *    \-> (E) --> (F)
-     */
-
-
     int nw = 0;
     if (argc > 1)
         nw = atoi(argv[1]);
     std::cout << "Specified num of worker: " << nw << std::endl;
 
     Graph<float> g;
-    //    //            id, in, out
 	auto *A = new Node<float>(1, 0, 11, 1);
 	auto *B = new Node<float>(2, 1, 1);
 	auto *C = new Node<float>(3, 1, 1);
@@ -292,7 +278,6 @@ int main(int argc, char *argv[]) {
         lc_n->addDependant(second_collector);
     }
     std::cout << "Nodes before any operation: \n";
-    //g.printNodes();
 
     {
 #ifndef SEQ

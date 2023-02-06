@@ -1,9 +1,7 @@
 #include <iostream>
 #include <cmath>
 #include "graph.h"
-//#include "graph.cpp"
 #include "../utimer.cpp"
-//#define SEQ
 
 #define CYCLE 100000
 
@@ -37,14 +35,6 @@ void appendNodesChain(int &startingId, Node<float> * startingNode, int chainLen,
     }
 }
 int main(int argc, char *argv[]) {
-
-    /*
-     *    /-> (B) \-v
-     * (A)            (D)
-     *  \ \-> (C) /-^  ^
-     *   \             |
-     *    \-> (E) --> (F)
-     */
 
 
     int nw = 0;
@@ -263,7 +253,6 @@ int main(int argc, char *argv[]) {
     g.addNode(K);
 
     std::cout << "Nodes before any operation: \n";
-    //g.printNodes();
 
     {
 #ifndef SEQ

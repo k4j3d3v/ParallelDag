@@ -1,7 +1,3 @@
-//
-// Created by luigi on 02/09/22.
-//
-
 #ifndef PARALLELDAG_MDFI_H
 #define PARALLELDAG_MDFI_H
 #include "node.h"
@@ -12,7 +8,7 @@ using vector = std::vector<T>;
 template<typename T>
 class Mdfi {
     private:
-         // TO BE USED ONLY FOR SOURCE INSTR
+         // TO BE USED ONLY FOR SOURCE(graph's roots) INSTR
         int outputToken;
 
 
