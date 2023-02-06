@@ -12,7 +12,7 @@ int main(int argc, char *argv[]) {
         nw = atoi(argv[1]);
     std::cout << "Specified num of worker: " << nw << std::endl;
     Graph<int> g ;
-    auto A = new Node<int >(1 , 0 , 2 , 2 ) ;
+    auto A = new Node<int >(1 , 0 , 2 ,  1) ;
     auto B = new Node<int >(2 , 1 , 1 ) ;
     auto C = new Node<int >(3 , 1 , 1 ) ;
     auto D = new Node<int >(4 , 2 , 0 ) ;
@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
 
     {
 #ifndef SEQ
-        utimer t("SEQ");
+        utimer t("PAR");
         g.setUpComp(nw);
         std::vector<int> v = g.compute(std::vector<int>{9});
         for (auto res : v) {
@@ -40,7 +40,7 @@ int main(int argc, char *argv[]) {
         }
 #endif
 #ifdef SEQ
-        utimer t("PAR");
+        utimer t("SEQ");
         g.setUpComp();
         g.compute_seq(std::vector<int>{9});
 #endif

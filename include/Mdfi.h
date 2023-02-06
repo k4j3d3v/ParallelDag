@@ -7,7 +7,11 @@ template<typename T>
 using vector = std::vector<T>;
 template<typename T>
 class Mdfi {
-    private:
+/**
+ * Implementation of a Macro Data Flow Instruction.
+ *
+ */
+private:
          // TO BE USED ONLY FOR SOURCE(graph's roots) INSTR
         int outputToken;
 
@@ -21,9 +25,12 @@ public:
     int missingToken;
 
 
-    Mdfi(Node<T> * node):dagNode(node),inputToken(node->input_size),\
-        outputToken(node->out_arity),missingToken(node->input_arity)
+    Mdfi(Node<T> * node): dagNode(node), inputToken(node->inputSize),\
+        outputToken(node->outputArity), missingToken(node->inputArity)
         {
+        /**
+         * Creates a mdfI starting from the specified dag's node and related infos.
+         */
             if(inputToken==0)
                 inputs.resize(this->missingToken);
             else

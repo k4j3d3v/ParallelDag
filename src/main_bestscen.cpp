@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
     std::cout << "Specified num of worker: " << nw << std::endl;
 
     Graph<float> g;
-    //    //            id, in, out
+
 	auto *A = new Node<float>(1, 0, 40, 1);
 	auto *B = new Node<float>(2, 1, 1);
 	auto *C = new Node<float>(3, 1, 1);

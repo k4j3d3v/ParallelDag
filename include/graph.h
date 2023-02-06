@@ -12,17 +12,25 @@
 
 template<typename T>
 class Graph{
-
+/**
+ * Implementation of a task graph.
+ */
 	private:
-	    Mdfg<T> *g_mdf;
-        unsigned thread_count;
+	    Mdfg<T> *mdfg;
+        unsigned threadCount;
         std::vector<Node<T> *> nodes;
-        std::unordered_map<int, std::vector<T>> nodes_output;
+        std::unordered_map<int, std::vector<T>> mapNodeIdsOutput;
+        std::vector<int> sinkNodes;
+
     void perThreadWork()
         {
+        /**
+         * Defines the work for the threads.
+         *
+         */
             while (true) {
 
-                Mdfi<T> *f = g_mdf->getFirable();
+                Mdfi<T> *f = mdfg->getFirable();
                 if(f != nullptr) {
 
                     std::vector<T> flattenedInput;
@@ -31,19 +39,21 @@ class Graph{
                     }
 
                     auto output = f->run(flattenedInput);
-                    auto res = g_mdf->sendToken(f, output);
+                    auto res = mdfg->sendToken(f, output);
                     if(res.size() > 0)
-                        nodes_output[f->dagNode->id]=res;
+                        mapNodeIdsOutput[f->dagNode->id]=res;
                 }
                 else
                 {
-                    std::cout<<"[ " << std::this_thread::get_id()<<" ]"<< " Computation finished\n";
                     return;
                 }
             }
         }
         void initializeSources(std::vector<T> const &sourceInput){
-            auto sourceInstr = g_mdf->getSources();
+            /**
+             * Initializes the graph's source/root nodes.
+             */
+            auto sourceInstr = mdfg->getSources();
             int i = 0;
             for(auto instr : sourceInstr) {
                 std::vector<T> forInstrIn;
@@ -53,10 +63,30 @@ class Graph{
                 instr->inputs[0]=forInstrIn;
             }
         }
+        void setSinkNodes()
+        {
+            for (unsigned i = 0; i < nodes.size(); ++i) {
+                if(nodes[i]->outputArity == 0)
+                    sinkNodes.push_back(nodes[i]->id);
+            }
+        }
+        std::vector<T> collectResults()
+        {
+            std::vector<T> results;
+            for(unsigned i= 0; i < sinkNodes.size(); ++i)
+            {
+                auto curr_node_out = mapNodeIdsOutput[sinkNodes[i]];
+                results.insert(end(results), begin(curr_node_out), end(curr_node_out));
+
+            }
+            return results;
+        }
 
 public:
         Graph(){};
+
 		void  addNode(Node<T> * node) {
+
             nodes.emplace_back(node);
 
         }
@@ -67,24 +97,31 @@ public:
 
         void setUpComp(NWORKER)
         {
+            /**
+             * Sets up the computation.
+             * If a n(umber) (of) w(orker) <= 0 is specified, takes the available hw concurrency.
+             */
     #ifdef SEQ
             std::cout<<"Sequential mode \n";
     #endif
-            g_mdf = new Mdfg<T>(this);
+            mdfg = new Mdfg<T>(this);
     #ifndef SEQ
             std::cout<<"Parallel mode \n";
             if(nw > 0)
-                thread_count = nw;
+                threadCount = nw;
             else
-                thread_count = std::thread::hardware_concurrency();
+                threadCount = std::thread::hardware_concurrency();
     #endif
         }
 
         std::vector<T> compute(std::vector<T> sourceInput) {
+            /**
+             * Start the graph computation in a parallel way and return the computed values.
+             */
             std::cout<<"Starting computations \n";
             initializeSources(sourceInput);
             std::vector<std::thread> threads;
-            for(unsigned i=0; i < thread_count; i++)
+            for(unsigned i=0; i < threadCount; i++)
             {
                 threads.push_back(std::thread(&Graph::perThreadWork, this));
             }
@@ -93,41 +130,32 @@ public:
             {
                     threads[i].join();
             }
-            std::vector<int> sink_nodes;
-            for (unsigned i = 0; i < nodes.size(); ++i) {
-                if(nodes[i]->out_arity==0)
-                    sink_nodes.push_back(nodes[i]->id);
-            }
-            std::vector<T> results;
-            for(unsigned i= 0; i < sink_nodes.size(); ++i)
-            {
-                auto curr_node_out = nodes_output[sink_nodes[i]];
-                results.insert(end(results), begin(curr_node_out), end(curr_node_out));
 
-            }
+            setSinkNodes();
+            auto results = collectResults();
             return results;
         }
-        void compute_seq(std::vector<T> sourceInput) {
-            std::cout<<"DIO ESEGUE SEQ \n ";
+        std::vector<T> compute_seq(std::vector<T> sourceInput) {
+            /**
+             * Start the graph computation in sequential way and return the computed values.
+             */
             initializeSources(sourceInput);
-            Mdfi<T> *f = g_mdf->getFirable();
+            Mdfi<T> *f = mdfg->getFirable();
             while (f!=nullptr) {
 
-                std::cout << "[ "<<std::this_thread::get_id()<<" ] Executing instruction dag n. " << f->dagNode->id << std::endl;
-
                 std::vector<T> flattenedInput;
-                std::cout << "[ "<<std::this_thread::get_id()<<" ]  BEFORE Flattened" << std::endl;
                 for(auto && v : f->inputs){
                     flattenedInput.insert(flattenedInput.end(), v.begin(), v.end());
                 }
-                std::cout << "[ "<<std::this_thread::get_id()<<" ]  AFTER Flattened" << std::endl;
-
                 auto output = f->run(flattenedInput);
-                g_mdf->sendToken(f, output);
-
-                f = g_mdf->getFirable();
+                auto res = mdfg->sendToken(f, output);
+                if(res.size() > 0)
+                    mapNodeIdsOutput[f->dagNode->id]=res;
+                f = mdfg->getFirable();
             }
-
+            setSinkNodes();
+            auto results = collectResults();
+            return results;
         }
 
 };

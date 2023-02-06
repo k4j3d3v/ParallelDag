@@ -13,21 +13,27 @@ class Graph;
 
 template<typename T>
 class Mdfg{
+    /**
+     * Implements a Macro Data Flow Graph.
+     */
     private:
 
         std::unordered_map<Node<T> *, Mdfi<T> *> mapNodeMdfi;
 #ifndef SEQ
-        std::mutex m_firable;
-        std::mutex repository_m;
+        std::mutex firableMutex;
+        std::mutex repositoryMutex;
         std::condition_variable cv;
 #endif
-        bool computation_done = false;
+        bool computationDone = false;
         std::vector<Mdfi<T>*> repository;
         std::queue<Mdfi<T> *> firable;
     public:
 
         Mdfg(Graph<T> *dag)
         {
+            /**
+             * Creates a MDFG starting from a dag.
+             */
             for (auto node : dag->getNodes()) {
                 Mdfi<T> * instr = new Mdfi(node);
                 mapNodeMdfi[node]=instr;
@@ -52,8 +58,12 @@ class Mdfg{
             }
 
         }
-        std::vector<T> sendToken(Mdfi<T> *executeInstr, std::vector<T> inputs){
-            auto dst =  executeInstr->outputDestination;
+        std::vector<T> sendToken(Mdfi<T> *executedInstr, std::vector<T> inputs){
+            /**
+             * Sends the token to the dependants' instruction.
+             * It contains the crucial part for thread-safe behaviours.
+             */
+            auto dst =  executedInstr->outputDestination;
 
             if(dst.empty())
             {
@@ -63,23 +73,23 @@ class Mdfg{
                 for (Mdfi<T> *outDest: dst) {
 
                     outDest->missingToken--;
-                    int pos = executeInstr->dagNode->offset_input[outDest->dagNode];
+                    int pos = executedInstr->dagNode->offsetInput[outDest->dagNode];
                     outDest->inputs[pos] = inputs;
                     if (outDest->missingToken == 0) {
 #ifndef SEQ
-                        repository_m.lock();
+                        repositoryMutex.lock();
 #endif
                         std::erase(repository, outDest);
 #ifndef SEQ
 
-                        repository_m.unlock();
+                        repositoryMutex.unlock();
 #endif
 #ifndef SEQ
-                        m_firable.lock();
+                        firableMutex.lock();
 #endif
                         firable.push(outDest);
 #ifndef SEQ
-                        m_firable.unlock();
+                        firableMutex.unlock();
                         cv.notify_all();
 #endif
                     }
@@ -89,6 +99,9 @@ class Mdfg{
         }
 
         std::vector<Mdfi<T> *> getSources(){
+            /**
+             * Returns the dag's source/root nodes.
+             */
             std::vector<Mdfi<T> *> sourceInstr;
             for(int i = 0; i < firable.size(); i++)
             {
@@ -98,11 +111,14 @@ class Mdfg{
         }
         Mdfi<T> *getFirable()
         {
+            /**
+             * Returns the next firable (mdf)Instruction.
+             */
 
-            bool empty_r = repository.empty();
-            bool empty_f = firable.empty();
-            if(empty_r && empty_f) {
-                computation_done = true;
+            bool emptyRep = repository.empty();
+            bool emptyFire = firable.empty();
+            if(emptyRep && emptyFire) {
+                computationDone = true;
 #ifndef SEQ
                 cv.notify_all();
 #endif
@@ -111,10 +127,10 @@ class Mdfg{
             Mdfi<T> *instr = nullptr;
             {
 #ifndef SEQ
-                std::unique_lock lc(m_firable);
+                std::unique_lock lc(firableMutex);
                 // while (firable.empty && !computation_done))
                 // stop waiting if firable is not empty or the computation is finished
-                cv.wait(lc, [&] { return !firable.empty() || computation_done; });
+                cv.wait(lc, [&] { return !firable.empty() || computationDone; });
 #endif
                 if(!firable.empty()) {
                     instr = firable.front();
