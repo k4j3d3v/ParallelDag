@@ -10,7 +10,6 @@
 auto fun = [](std::vector<float> in) {
 
     float bd = in[0], be = in[1], bf = in[2], bg = in[3];
-    std::cout<<" Porca merda \n";
     for (int i = 0; i < CYCLE; i++) {
         bg = sin(sin(sin(bg)));
         be = sin(pow(be, i) + sqrt(i * bg));
@@ -23,7 +22,6 @@ auto fun = [](std::vector<float> in) {
 };
 void appendNodesChain(int &startingId, Node<float> * startingNode, int chainLen, Graph<float> &g)
 {
-    std::cout<<"diocane";
     std::vector<Node<float> * > dependence= {startingNode};
     for (int i=0, out_a=1; i< chainLen; i++)
     {
@@ -68,17 +66,22 @@ int main(int argc, char *argv[]) {
     int id = 2;
     appendNodesChain(id, A, 10000, g);
 
+    std::vector<float> v;
     {
 #ifndef SEQ
-        utimer t("SEQ");
+        utimer t("PAR");
         g.setUpComp(nw);
-        g.compute(std::vector<float>{9});
+        v = g.compute(std::vector<float>{9});
 #endif
 #ifdef SEQ
-        utimer t("PAR");
+        utimer t("SEQ");
         g.setUpComp();
-        g.compute_seq(std::vector<float>{9});
+        v = g.compute_seq(std::vector<float>{9});
 #endif
+    }
+
+    for (auto res : v) {
+        std::cout<<res<< std::endl;
     }
 
 

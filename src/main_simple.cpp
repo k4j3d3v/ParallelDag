@@ -42,7 +42,10 @@ int main(int argc, char *argv[]) {
 #ifdef SEQ
         utimer t("SEQ");
         g.setUpComp();
-        g.compute_seq(std::vector<int>{9});
+        std::vector<int> v = g.compute_seq(std::vector<int>{9});
+        for (auto res : v) {
+            std::cout<<res<< std::endl;
+        }
 #endif
     }
 

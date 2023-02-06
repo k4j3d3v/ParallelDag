@@ -249,10 +249,8 @@ int main(int argc, char *argv[]) {
     g.addNode(I);
     g.addNode(J);
     g.addNode(K);
-    std::cout<<"base id before: "<<base_id<<"\n";
     auto first_collector = new Node<float>(base_id++, lastChainNodes.size(), 7);
 
-    std::cout<<"base id after: "<<base_id<<"\n";
     first_collector->addCompute(fun);
     g.addNode(first_collector);
     for(auto lc_n : lastChainNodes)
@@ -263,7 +261,6 @@ int main(int argc, char *argv[]) {
     lastChainNodes.clear();
     for(int i= 0; i < 7; i++)
     {
-        std::cout<<"base id oho: "<<base_id<<"\n";
         auto descendant = new Node<float>(base_id++, 1, 1);;
         descendant->addCompute(fun);
         first_collector->addDependant(descendant);
@@ -277,22 +274,25 @@ int main(int argc, char *argv[]) {
     {
         lc_n->addDependant(second_collector);
     }
-    std::cout << "Nodes before any operation: \n";
 
+
+    std::vector<float> v;
     {
 #ifndef SEQ
         utimer t("PAR");
         g.setUpComp(nw);
-        g.compute(std::vector<float>{9});
+        v = g.compute(std::vector<float>{9});
 #endif
 #ifdef SEQ
         utimer t("SEQ");
         g.setUpComp();
-        g.compute_seq(std::vector<float>{9});
+        v = g.compute_seq(std::vector<float>{9});
 #endif
     }
 
-
+    for (auto res : v) {
+        std::cout<<res<< std::endl;
+    }
 
 
     std::cout << "Finished!\n";

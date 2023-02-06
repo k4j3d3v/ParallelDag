@@ -252,23 +252,23 @@ int main(int argc, char *argv[]) {
     g.addNode(J);
     g.addNode(K);
 
-    std::cout << "Nodes before any operation: \n";
-
+    std::vector<float> v;
     {
 #ifndef SEQ
-        utimer t("SEQ");
+        utimer t("PAR");
         g.setUpComp(nw);
-        g.compute(std::vector<float>{9});
+        v = g.compute(std::vector<float>{9});
 #endif
 #ifdef SEQ
-        utimer t("PAR");
+        utimer t("SEQ");
         g.setUpComp();
-        g.compute_seq(std::vector<float>{9});
+        v = g.compute_seq(std::vector<float>{9});
 #endif
     }
 
-
-
+    for (auto res : v) {
+        std::cout<<res<< std::endl;
+    }
 
     std::cout << "Finished!\n";
     return 0;
