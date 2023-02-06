@@ -4,8 +4,6 @@
 #include "Mdfi.h"
 #include "Mdfg.h"
 
-//template<typename T>
-//class Mdfg;
 #ifndef SEQ
     #define NWORKER int nw
 #else
@@ -19,7 +17,7 @@ class Graph{
 	    Mdfg<T> *g_mdf;
         unsigned thread_count;
         std::vector<Node<T> *> nodes;
-
+        std::unordered_map<int, std::vector<T>> nodes_output;
     void perThreadWork()
         {
             while (true) {
@@ -27,17 +25,19 @@ class Graph{
                 Mdfi<T> *f = g_mdf->getFirable();
                 if(f != nullptr) {
 
-                    std::cout << "[ "<<std::this_thread::get_id()<<" ] Executing instruction dag n. " << f->dagNode->id << std::endl;
+                   // std::cout << "[ "<<std::this_thread::get_id()<<" ] Executing instruction dag n. " << f->dagNode->id << std::endl;
 
-                    std::vector<float> flattenedInput;
-                    std::cout << "[ "<<std::this_thread::get_id()<<" ]  BEFORE Flattened" << std::endl;
+                    std::vector<T> flattenedInput;
+                    //std::cout << "[ "<<std::this_thread::get_id()<<" ]  BEFORE Flattened" << std::endl;
                     for(auto && v : f->inputs){
                         flattenedInput.insert(flattenedInput.end(), v.begin(), v.end());
                     }
-                    std::cout << "[ "<<std::this_thread::get_id()<<" ]  AFTER Flattened" << std::endl;
+                   // std::cout << "[ "<<std::this_thread::get_id()<<" ]  AFTER Flattened" << std::endl;
 
                     auto output = f->run(flattenedInput);
-                    g_mdf->sendToken(f, output);
+                    auto res = g_mdf->sendToken(f, output);
+                    if(res.size() > 0)
+                        nodes_output[f->dagNode->id]=res;
                 }
                 else
                 {
@@ -84,7 +84,7 @@ public:
     #endif
         }
 
-        void compute(std::vector<T> sourceInput) {
+        std::vector<T> compute(std::vector<T> sourceInput) {
             std::cout<<"Starting computations \n";
             initializeSources(sourceInput);
             std::vector<std::thread> threads;
@@ -97,7 +97,19 @@ public:
             {
                     threads[i].join();
             }
+            std::vector<int> sink_nodes;
+            for (unsigned i = 0; i < nodes.size(); ++i) {
+                if(nodes[i]->out_arity==0)
+                    sink_nodes.push_back(nodes[i]->id);
+            }
+            std::vector<T> results;
+            for(unsigned i= 0; i < sink_nodes.size(); ++i)
+            {
+                auto curr_node_out = nodes_output[sink_nodes[i]];
+                results.insert(end(results), begin(curr_node_out), end(curr_node_out));
 
+            }
+            return results;
         }
         void compute_seq(std::vector<T> sourceInput) {
             std::cout<<"DIO ESEGUE SEQ \n ";

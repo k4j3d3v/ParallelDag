@@ -8,7 +8,7 @@ set(CMAKE_CXX_STANDARD 20)
 
 
 include_directories(include)
-file(GLOB SOURCES "src/main.cpp")
+file(GLOB SOURCES "src/main_simple.cpp")
 #file(GLOB SOURCES2 src/*.cpp)
 #message("souces: ${SOURCES}")
 add_executable(pardag ${SOURCES})

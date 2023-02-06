@@ -23,7 +23,7 @@ class Mdfg{
         std::unordered_map<Node<T> *, Mdfi<T> *> mapNodeMdfi;
 #ifndef SEQ
         std::mutex m_firable;
-//        std::mutex repository_m;
+        std::mutex repository_m;
         std::condition_variable cv;
 #endif
         bool computation_done = false;
@@ -57,34 +57,37 @@ class Mdfg{
             }
 
         }
-        void sendToken(Mdfi<T> *executeInstr, std::vector<T> inputs){
+        std::vector<T> sendToken(Mdfi<T> *executeInstr, std::vector<T> inputs){
             auto dst =  executeInstr->outputDestination;
 
             if(dst.empty())
             {
 
-                for(auto i : inputs)
-                    std::cout<<(i)<<std::endl;
-
+//                for(auto i : inputs)
+//                    std::cout<<(i)<<std::endl;
+                return inputs;
             }
-            else
-
-                for(Mdfi<T> * outDest : dst)
-                {
+            else {
+                for (Mdfi<T> *outDest: dst) {
 
                     outDest->missingToken--;
                     int pos = executeInstr->dagNode->offset_input[outDest->dagNode];
                     //here?
-                    outDest->inputs[pos]=inputs;
+                    outDest->inputs[pos] = inputs;
                     if (outDest->missingToken == 0) {
-//                        repository_m.lock();
+#ifndef SEQ
+                        repository_m.lock();
+#endif
                         std::erase(repository, outDest);
-//                        repository_m.unlock();
-                       // outDest->setFirable();
+#ifndef SEQ
+
+                        repository_m.unlock();
+#endif
+                        // outDest->setFirable();
 #ifndef SEQ
                         m_firable.lock();
 #endif
-                        std::cout<<"Pushing instruction n. "<<outDest->dagNode->id<<std::endl;
+                        //std::cout<<"Pushing instruction n. "<<outDest->dagNode->id<<std::endl;
                         firable.push(outDest);
 #ifndef SEQ
                         m_firable.unlock();
@@ -92,11 +95,12 @@ class Mdfg{
 #endif
                     }
                 }
-
+                return std::vector<T>{};
+            }
         }
-        unsigned countMissingInstructions(){
-            return repository.size();
-        }
+//        unsigned countMissingInstructions(){
+//            return repository.size();
+//        }
         std::vector<Mdfi<T> *> getSources(){
             std::vector<Mdfi<T> *> sourceInstr;
             for(int i = 0; i < firable.size(); i++)
@@ -121,7 +125,9 @@ class Mdfg{
             {
 #ifndef SEQ
                 std::unique_lock lc(m_firable);
-
+                // wait until the firable is no more empty or the computation is finished
+                // while (firable.empty && !computation_done))
+                // esci se firable non è vuota o la computazione è finita
                 cv.wait(lc, [&] { return !firable.empty() || computation_done; });
 #endif
                 if(!firable.empty()) {
